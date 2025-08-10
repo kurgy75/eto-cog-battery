@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sport Cognition Battery — Corsi + Number Grid</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root { --card:#fff; --line:#e5e7eb; --ink:#1d2733; --muted:#64748b; --blue:#1d4ed8; }
+    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f6f7fb; color:var(--ink); margin:0; }
+    .wrap { max-width: 1100px; margin: 24px auto 48px; padding: 0 16px; }
+    h1,h2 { margin: 8px 0 6px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:0 2px 10px rgba(0,0,0,.03); }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:10px 0 6px; }
+    input[type="text"] { padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; min-width:220px; }
+    select { padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; }
+    button { padding:10px 16px; border-radius:10px; border:1px solid var(--blue); background:var(--blue); color:#fff; cursor:pointer; font-weight:600; }
+    button[disabled] { opacity:.5; cursor:not-allowed; }
+    .muted { color:var(--muted); font-size:14px; }
+    .pill { display:inline-block; padding:4px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; font-weight:600; }
+    .divider { height:1px; background:var(--line); margin:14px 0; }
+    .ok { color:#16a34a; } .warn { color:#b45309; } .err { color:#dc2626; }
+    .hidden { display:none; }
+
+    /* Corsi board */
+    .board { position: relative; width: 600px; height: 500px; margin: 16px auto; background:#fff; border:2px solid var(--line); border-radius:14px; }
+    .block { position:absolute; width:84px; height:84px; background:#d7dee9; border-radius:12px; cursor:pointer;
+             transition: transform .08s ease, background-color .15s ease; box-shadow: inset 0 0 0 2px #c6cfdb; }
+    .block:active { transform: scale(.98); }
+    .highlight { background:#ffe66d !important; box-shadow: inset 0 0 0 2px #f7c948; }
+    .clicked { background:#badeff !important; box-shadow: inset 0 0 0 2px #82b7f5; }
+
+    /* Number Grid */
+    .grid { display:grid; grid-template-columns: repeat(10, 1fr); gap:8px; margin: 16px 0; }
+    .cell { user-select:none; display:flex; align-items:center; justify-content:center; height:58px; background:#ffffff; border:1px solid #d7dee9; border-radius:10px;
+            font-variant-numeric: tabular-nums; font-weight:700; font-size:18px; cursor:pointer; transition: transform .05s ease, background .15s ease, border-color .15s ease; }
+    .cell:active { transform: scale(.98); }
+    .cell.correct { background:#dcfce7; border-color:#86efac; }
+    .cell.wrong { background:#fee2e2; border-color:#fca5a5; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="t_app_title">Sport Cognition Battery</h1>
+
+    <!-- Landing -->
+    <section id="screen-landing" class="card">
+      <h2 id="t_landing_title">Welcome</h2>
+      <div class="row">
+        <label><span id="t_participant">Participant ID</span>:
+          <input id="participantId" type="text" placeholder="e.g., P0123" />
+        </label>
+        <label><span id="t_computer">Computer ID</span>:
+          <input id="computerId" type="text" placeholder="e.g., LAB-A-PC1" />
+        </label>
+        <label><span id="t_language">Language</span>:
+          <select id="lang">
+            <option value="en">English</option>
+            <option value="hu">Magyar</option>
+          </select>
+        </label>
+      </div>
+      <details open>
+        <summary id="t_battery_h">About this session</summary>
+        <div class="muted" id="t_battery_body" style="margin-top:8px; line-height:1.5;">
+          • You will complete two tasks in this order: <b>Corsi</b> → <b>Number Grid</b>.<br/>
+          • Please work quickly and accurately. Reaction times and accuracy are recorded.<br/>
+          • Use the same computer and Chrome browser when possible.
+        </div>
+      </details>
+      <div class="row">
+        <label class="muted"><input type="checkbox" id="confirmBattery" /> <span id="t_confirm_battery">I have read the instructions.</span></label>
+      </div>
+      <div class="row">
+        <button id="btnStartBattery" disabled><span id="t_start_battery">Start — Corsi</span></button>
+      </div>
+    </section>
+
+    <!-- Corsi -->
+    <section id="screen-corsi" class="hidden">
+      <div class="card">
+        <h2 id="t_corsi_title">Corsi Block Tapping Task</h2>
+        <details open>
+          <summary id="t_corsi_h">Instructions (please read carefully)</summary>
+          <div class="muted" id="t_corsi_body" style="margin-top:8px; line-height:1.5;">
+            • Squares will light up one-by-one; watch the full sequence.<br/>
+            • Then click the squares in the <b>same order</b>.<br/>
+            • After a correct trial, the sequence gets longer. If you make a mistake, you retry the same length once. Two mistakes at the same length ends the task.<br/>
+            • Respond quickly and accurately; we record reaction times.
+          </div>
+        </details>
+        <div class="row">
+          <label class="muted"><input type="checkbox" id="confirmCorsi" /> <span id="t_confirm_corsi">I have read and understood these instructions.</span></label>
+        </div>
+        <div class="row">
+          <button id="btnStartCorsi" disabled><span id="t_start_corsi">Start Corsi</span></button>
+          <span id="corsiStatus" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="board" id="corsiBoard" aria-label="Corsi board"></div>
+
+      <div class="card">
+        <div class="pill"><span id="t_live">Live status</span>: <span id="corsiLive">—</span></div>
+        <div class="muted" id="corsiInfo">Waiting…</div>
+        <div class="divider"></div>
+        <div class="muted" id="corsiPost"> </div>
+      </div>
+    </section>
+
+    <!-- Number Grid -->
+    <section id="screen-grid" class="hidden">
+      <div class="card">
+        <h2 id="t_grid_title">Number Grid 00→99 (4 min)</h2>
+        <details open>
+          <summary id="t_grid_h">Instructions (please read carefully)</summary>
+          <div class="muted" id="t_grid_body" style="margin-top:8px; line-height:1.5;">
+            • A 10×10 grid shows numbers from <b>00</b> to <b>99</b> in random positions.<br/>
+            • Click the numbers in <b>ascending order</b>: 00, 01, 02, …, 99.<br/>
+            • You have <b>4 minutes</b>. Incorrect clicks are recorded but do not advance the target number.<br/>
+            • Reaction times are measured between correct clicks.
+          </div>
+        </details>
+        <div class="row">
+          <label class="muted"><input type="checkbox" id="confirmGrid" /> <span id="t_confirm_grid">I have read and understood these instructions.</span></label>
+        </div>
+        <div class="row">
+          <button id="btnStartGrid" disabled><span id="t_start_grid">Start Number Grid</span></button>
+          <button id="btnDownload" disabled><span id="t_download">Download CSV</span></button>
+          <button id="btnNew" disabled><span id="t_new">New participant</span></button>
+          <span id="gridStatus" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="pill"><span id="t_timer">Time left</span>: <span id="timer">04:00</span></div>
+          <div class="pill"><span id="t_target">Target</span>: <span id="target">00</span></div>
+          <div class="pill"><span id="t_errors">Errors</span>: <span id="errors">0</span></div>
+          <div class="pill"><span id="t_progress">Progress</span>: <span id="progress">0 / 100</span></div>
+        </div>
+        <div id="grid" class="grid" aria-label="Number grid"></div>
+        <div class="divider"></div>
+        <div class="muted" id="gridPost"> </div>
+      </div>
+    </section>
+
+    <!-- Thanks -->
+    <section id="screen-thanks" class="hidden">
+      <div class="card">
+        <h2 id="t_thanks_title">All done — thank you!</h2>
+        <p class="muted" id="t_thanks_body">Your data has been recorded. You can download your CSV or start a new participant.</p>
+        <div class="row">
+          <button id="btnDownload2"><span id="t_download2">Download CSV</span></button>
+          <button id="btnNew2"><span id="t_new2">New participant</span></button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ===== i18n =====
+    const I18N = {
+      en: {
+        app_title: "Sport Cognition Battery",
+        landing_title: "Welcome",
+        participant: "Participant ID",
+        computer: "Computer ID",
+        language: "Language",
+        battery_h: "About this session",
+        battery_body:
+          "• You will complete two tasks in this order: <b>Corsi</b> → <b>Number Grid</b>.<br/>" +
+          "• Please work quickly and accurately. Reaction times and accuracy are recorded.<br/>" +
+          "• Use the same computer and Chrome browser when possible.",
+        confirm_battery: "I have read the instructions.",
+        start_battery: "Start — Corsi",
+
+        corsi_title: "Corsi Block Tapping Task",
+        corsi_h: "Instructions (please read carefully)",
+        corsi_body:
+          "• Squares will light up one-by-one; watch the full sequence.<br/>" +
+          "• Then click the squares in the <b>same order</b>.<br/>" +
+          "• After a correct trial, the sequence gets longer. If you make a mistake, you retry the same length once. Two mistakes at the same length ends the task.<br/>" +
+          "• Respond quickly and accurately; we record reaction times.",
+        confirm_corsi: "I have read and understood these instructions.",
+        start_corsi: "Start Corsi",
+        live: "Live status",
+        corsi_finished: s => `Corsi finished. Final span: ${s}`,
+        corsi_info2: "Proceeding to the next task…",
+
+        grid_title: "Number Grid 00→99 (4 min)",
+        grid_h: "Instructions (please read carefully)",
+        grid_body:
+          "• A 10×10 grid shows numbers from <b>00</b> to <b>99</b> in random positions.<br/>" +
+          "• Click the numbers in <b>ascending order</b>: 00, 01, 02, …, 99.<br/>" +
+          "• You have <b>4 minutes</b>. Incorrect clicks are recorded but do not advance the target number.<br/>" +
+          "• Reaction times are measured between correct clicks.",
+        confirm_grid: "I have read and understood these instructions.",
+        start_grid: "Start Number Grid",
+
+        timer: "Time left", target: "Target", errors: "Errors", progress: "Progress",
+        posting: "Sending data to Google Sheets…",
+        posted: "Data sent to Google Sheets.",
+        posterr: "Could not send to Google Sheets (saved CSV locally).",
+        grid_finished: n => `Number Grid finished. Highest number reached: ${n}`,
+        thanks_title: "All done — thank you!",
+        thanks_body: "Your data has been recorded. You can download your CSV or start a new participant.",
+        download: "Download CSV", download2: "Download CSV", new: "New participant", new2: "New participant"
+      },
+      hu: {
+        app_title: "Sportkognitív tesztcsomag",
+        landing_title: "Üdvözöljük",
+        participant: "Résztvevő azonosító",
+        computer: "Számítógép azonosító",
+        language: "Nyelv",
+        battery_h: "A feladatról",
+        battery_body:
+          "• Két feladat következik ebben a sorrendben: <b>Corsi</b> → <b>Számtábla</b>.<br/>" +
+          "• Kérjük, dolgozzon gyorsan és pontosan. A reakcióidőket és a pontosságot rögzítjük.<br/>" +
+          "• Lehetőleg ugyanazt a gépet és Chrome böngészőt használja.",
+        confirm_battery: "Elolvastam az útmutatót.",
+        start_battery: "Indítás — Corsi",
+
+        corsi_title: "Corsi-blokk koppintási feladat",
+        corsi_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+        corsi_body:
+          "• Négyzetek fognak egymás után röviden felvillanni; figyelje a teljes sorrendet.<br/>" +
+          "• Ezután koppintsa/kattintsa végig <b>ugyanabban a sorrendben</b>!<br/>" +
+          "• Helyes válasz után a sorozat hossza nő. Ha hibázik, ugyanazt a hosszt még egyszer megismételjük. Két hiba ugyanazon a hosszon megszakítja a feladatot.<br/>" +
+          "• Próbáljon gyorsan és pontosan válaszolni; a reakcióidőket rögzítjük.",
+        confirm_corsi: "Elolvastam és megértettem az útmutatót.",
+        start_corsi: "Corsi indítása",
+        live: "Állapot",
+        corsi_finished: s => `Corsi vége. Végső span: ${s}`,
+        corsi_info2: "Következő feladatra lépés…",
+
+        grid_title: "Számtábla 00→99 (4 perc)",
+        grid_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+        grid_body:
+          "• Egy 10×10-es táblán <b>00</b>-tól <b>99</b>-ig szerepelnek a számok véletlen sorrendben.<br/>" +
+          "• Kattintson <b>növekvő sorrendben</b>: 00, 01, 02, …, 99.<br/>" +
+          "• <b>4 perc</b> áll rendelkezésre. A hibás kattintásokat rögzítjük, de nem léptetik előre a célszámot.<br/>" +
+          "• A reakcióidőt a helyes kattintások között mérjük.",
+        confirm_grid: "Elolvastam és megértettem az útmutatót.",
+        start_grid: "Számtábla indítása",
+
+        timer: "Hátralévő idő", target: "Cél", errors: "Hibák", progress: "Előrehaladás",
+        posting: "Adatok küldése a Google Sheets-be…",
+        posted: "Adatok elküldve a Google Sheets-be.",
+        posterr: "Nem sikerült elküldeni (CSV helyben mentve).",
+        grid_finished: n => `Számtábla vége. Elért legnagyobb szám: ${n}`,
+        thanks_title: "Köszönjük!",
+        thanks_body: "Az adatok rögzítésre kerültek. Letöltheti a CSV-t vagy indíthat új résztvevőt.",
+        download: "CSV letöltése", download2: "CSV letöltése", new: "Új résztvevő", new2: "Új résztvevő"
+      }
+    };
+
+    // ===== Config =====
+    const CSV_DELIM = ';';
+    const ADD_UTF8_BOM = true;
+    const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw3ZQ1bLj9EG6GD4MPpLLzQ1sTIU9OjBazJfG2tKTxyT1KyElmjEca36IF4fdZpo5nxwg/exec"; // ← paste your current Web App URL
+
+    // Corsi config
+    const START_SPAN = 2;
+    const MAX_SPAN = 9;
+    const FLASH_MS = 650;
+    const ISI_MS = 850;
+
+    // Number Grid config
+    const TOTAL_NUMBERS = 100;
+    const LIMIT_MS = 4 * 60 * 1000;
+
+    // ===== Shared state =====
+    let lang = 'en', T = I18N.en;
+    let sessionId = null;
+    let allRows = []; // combined logs from both tasks for the final CSV
+
+    // ===== Helpers =====
+    const $ = id => document.getElementById(id);
+    const fmt2 = n => (n < 10 ? '0'+n : ''+n);
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    function setLang(newLang) {
+      lang = newLang; T = I18N[lang];
+      // Landing
+      $('t_app_title').textContent = T.app_title;
+      $('t_landing_title').textContent = T.landing_title;
+      $('t_participant').textContent = T.participant;
+      $('t_computer').textContent = T.computer;
+      $('t_language').textContent = T.language;
+      $('t_battery_h').textContent = T.battery_h;
+      $('t_battery_body').innerHTML = T.battery_body;
+      $('t_confirm_battery').textContent = T.confirm_battery;
+      $('t_start_battery').textContent = T.start_battery;
+      // Corsi
+      $('t_corsi_title').textContent = T.corsi_title;
+      $('t_corsi_h').textContent = T.corsi_h;
+      $('t_corsi_body').innerHTML = T.corsi_body;
+      $('t_confirm_corsi').textContent = T.confirm_corsi;
+      $('t_start_corsi').textContent = T.start_corsi;
+      $('t_live').textContent = T.live;
+      // Grid
+      $('t_grid_title').textContent = T.grid_title;
+      $('t_grid_h').textContent = T.grid_h;
+      $('t_grid_body').innerHTML = T.grid_body;
+      $('t_confirm_grid').textContent = T.confirm_grid;
+      $('t_start_grid').textContent = T.start_grid;
+      $('t_timer').textContent = T.timer;
+      $('t_target').textContent = T.target;
+      $('t_errors').textContent = T.errors;
+      $('t_progress').textContent = T.progress;
+      // Thanks
+      $('t_thanks_title').textContent = T.thanks_title;
+      $('t_thanks_body').textContent = T.thanks_body;
+      $('t_download').textContent = T.download;
+      $('t_download2').textContent = T.download2;
+      $('t_new').textContent = T.new;
+      $('t_new2').textContent = T.new2;
+    }
+    function show(id){ $(id).classList.remove('hidden'); }
+    function hide(id){ $(id).classList.add('hidden'); }
+
+    function gateStartBattery() {
+      const ok = $('confirmBattery').checked &&
+                 $('participantId').value.trim().length > 0 &&
+                 $('computerId').value.trim().length > 0;
+      $('btnStartBattery').disabled = !ok;
+    }
+
+    function postToSheets(rows) {
+      if (!SHEETS_WEBAPP_URL || !rows.length) return;
+      const el = rows[0].taskName === 'Corsi' ? $('corsiPost') : $('gridPost');
+      el.textContent = T.posting; el.className = "muted warn";
+      // no-cors simple POST
+      fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ trials: rows })
+      }).then(_ => { el.textContent = T.posted + " (check the Sheet)"; el.className = "muted ok"; })
+        .catch(e => { el.textContent = T.posterr + " ("+e+")"; el.className = "muted err"; });
+    }
+
+    function finalCSV() {
+      const header = [
+        'timestamp','lang','participantId','computerId','sessionId','taskName',
+        'trialIndex','span','sequence','response','correct',
+        'firstRT_ms','allRTs_ms','interClickRTs_ms','totalTime_ms',
+        'targetNumber','clickedNumber','rtSincePrevCorrect_ms','absoluteTime_ms'
+      ];
+      const lines = [header.join(CSV_DELIM)];
+      for (const r of allRows) {
+        const row = header.map(h => (r[h] != null ? String(r[h]) : ''));
+        lines.push(row.join(CSV_DELIM));
+      }
+      const blob = new Blob([(ADD_UTF8_BOM ? '\uFEFF' : '') + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const pid = ($('participantId').value.trim() || 'UNKNOWN').replace(/[^A-Za-z0-9_-]/g, '');
+      const stamp = new Date().toISOString().replace(/[:.]/g,'-');
+      const fname = `battery_${pid}_${stamp}.csv`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    // ===== Corsi implementation =====
+    const corsiPositions = [
+      { left: 50,  top: 40  },
+      { left: 250, top: 40  },
+      { left: 450, top: 40  },
+      { left: 150, top: 140 },
+      { left: 300, top: 160 },
+      { left: 50,  top: 300 },
+      { left: 200, top: 280 },
+      { left: 400, top: 280 },
+      { left: 300, top: 400 }
+    ];
+    let corsiBlocks = [], corsiCanClick=false, corsiSpan=START_SPAN, corsiFails=0, corsiSeq=[], corsiUser=[], corsiRTAll=[], corsiRTInter=[], corsiStartResp=null, corsiTrials=[], corsiRunning=false;
+
+    function corsiBuildBoard() {
+      const board = $('corsiBoard'); board.innerHTML = ''; corsiBlocks = [];
+      for (let i=0;i<9;i++){
+        const d = document.createElement('div');
+        d.className = 'block'; d.dataset.index=i;
+        d.style.left = corsiPositions[i].left + 'px';
+        d.style.top  = corsiPositions[i].top  + 'px';
+        d.addEventListener('click', () => corsiHandleClick(i,d));
+        board.appendChild(d); corsiBlocks.push(d);
+      }
+    }
+    function corsiMakeSeq(len){ const s=[]; while(s.length<len){ const r=Math.floor(Math.random()*9); if(!s.includes(r)) s.push(r);} return s; }
+    async function corsiPresent(seq){
+      corsiBlocks.forEach(b=>b.classList.remove('clicked'));
+      corsiCanClick=false; corsiUser=[]; corsiRTAll=[]; corsiRTInter=[]; corsiStartResp=null;
+      $('corsiInfo').textContent = (lang==='en'?`Watch the sequence (span ${seq.length})`:`Figyelje a sorozatot (hossz: ${seq.length})`);
+      for(let i=0;i<seq.length;i++){
+        const idx=seq[i]; corsiBlocks[idx].classList.add('highlight'); await sleep(FLASH_MS);
+        corsiBlocks[idx].classList.remove('highlight'); await sleep(Math.max(0, ISI_MS-FLASH_MS));
+      }
+      corsiCanClick = true;
+      $('corsiInfo').textContent = (lang==='en'?`Respond now: tap the sequence of ${seq.length} squares`:`Most válaszoljon: koppintsa a ${seq.length} négyzetet`);
+    }
+    function corsiHandleClick(idx, el){
+      if (!corsiCanClick) return;
+      const now = performance.now();
+      if (!corsiStartResp) corsiStartResp = now;
+      corsiUser.push(idx); el.classList.add('clicked');
+      const rel = Math.round(now - corsiStartResp);
+      corsiRTAll.push(rel);
+      if (corsiRTAll.length===1) corsiRTInter.push(rel);
+      else corsiRTInter.push(corsiRTAll[corsiRTAll.length-1]-corsiRTAll[corsiRTAll.length-2]);
+      if (corsiUser.length === corsiSeq.length) { corsiCanClick = false; corsiEval(); }
+    }
+    function corsiArraysEqual(a,b){ if(a.length!==b.length) return false; for(let i=0;i<a.length;i++) if(a[i]!==b[i]) return false; return true; }
+    function corsiEval(){
+      const correct = corsiArraysEqual(corsiUser, corsiSeq);
+      const firstRT = corsiRTAll.length ? corsiRTAll[0] : null;
+      const totalTime = corsiRTAll.length ? corsiRTAll[corsiRTAll.length-1] : null;
+      const rec = {
+        timestamp: new Date().toISOString(),
+        lang, participantId: $('participantId').value.trim(), computerId: $('computerId').value.trim(),
+        sessionId, taskName: 'Corsi',
+        trialIndex: corsiTrials.length+1,
+        span: corsiSeq.length,
+        sequence: corsiSeq.map(i=>i+1).join('-'),
+        response: corsiUser.map(i=>i+1).join('-'),
+        correct: correct?1:0,
+        firstRT_ms: firstRT, allRTs_ms: corsiRTAll.join(';'),
+        interClickRTs_ms: corsiRTInter.join(';'), totalTime_ms: totalTime,
+        targetNumber:'', clickedNumber:'', rtSincePrevCorrect_ms:'', absoluteTime_ms:''
+      };
+      corsiTrials.push(rec); allRows.push(rec);
+
+      if (correct) { corsiFails=0; corsiSpan++; $('corsiInfo').textContent = (lang==='en'?`Correct ✅ — advancing to span ${corsiSpan}`:`Helyes ✅ — lépés a(z) ${corsiSpan} hosszra`); }
+      else { corsiFails++; $('corsiInfo').textContent = (lang==='en'?`Incorrect ❌ — ${corsiFails} / 2 errors at span ${corsiSpan}`:`Hibás ❌ — ${corsiFails} / 2 hiba ezen a hosszon (${corsiSpan})`); }
+
+      if (corsiFails>=2 || corsiSpan>MAX_SPAN) corsiEnd();
+      else { corsiSeq = corsiMakeSeq(corsiSpan); setTimeout(()=>corsiPresent(corsiSeq), 900); $('corsiLive').textContent = `${corsiSpan} (errors: ${corsiFails})`; }
+    }
+    function corsiBegin(){
+      corsiTrials=[]; corsiSpan=START_SPAN; corsiFails=0; corsiRunning=true;
+      $('corsiStatus').textContent='…'; $('corsiLive').textContent=`${corsiSpan}`; $('corsiInfo').textContent=''; $('corsiPost').textContent='';
+      $('btnStartCorsi').disabled=true; $('confirmCorsi').disabled=true;
+      corsiBuildBoard(); corsiSeq = corsiMakeSeq(corsiSpan); corsiPresent(corsiSeq);
+    }
+    function corsiEnd(){
+      corsiRunning=false;
+      const maxSpan = corsiTrials.filter(t=>t.correct===1).reduce((m,t)=>Math.max(m,t.span),0);
+      $('corsiStatus').textContent = T.corsi_finished(maxSpan);
+      $('corsiInfo').textContent = T.corsi_info2;
+
+      // Post Corsi rows
+      postToSheets(corsiTrials);
+
+      // Move to next task after short pause
+      setTimeout(()=>{ hide('screen-corsi'); show('screen-grid'); }, 800);
+    }
+
+    // ===== Number Grid implementation =====
+    let gridNumbers=[], gridCells=[], gridTarget=0, gridErrors=0, gridClicks=0, gridTrials=[], gridRunning=false, tStart=null, tPrevCorrect=null, gridTimer=null;
+
+    function gridBuild(){
+      const grid = $('grid'); grid.innerHTML=''; gridCells=[]; gridNumbers = Array.from({length:TOTAL_NUMBERS},(_,i)=>i);
+      for (let i=gridNumbers.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [gridNumbers[i],gridNumbers[j]]=[gridNumbers[j],gridNumbers[i]]; }
+      gridNumbers.forEach(v=>{
+        const d=document.createElement('div'); d.className='cell'; d.dataset.value=String(v); d.textContent=fmt2(v);
+        d.addEventListener('click', ()=>gridClick(v,d)); grid.appendChild(d); gridCells.push(d);
+      });
+    }
+    function gridClick(val, el){
+      if (!gridRunning) return;
+      const now = performance.now(); gridClicks++;
+      const expected = gridTarget;
+      const absTime = Math.round(now - tStart);
+      const rtSincePrev = (tPrevCorrect==null)?absTime:Math.round(now - tPrevCorrect);
+      const correct = (val===expected);
+
+      const rec = {
+        timestamp:new Date().toISOString(), lang, participantId:$('participantId').value.trim(), computerId:$('computerId').value.trim(),
+        sessionId, taskName:'NumberGrid',
+        trialIndex:gridClicks, span:'', sequence:'', response:'', correct: correct?1:0,
+        firstRT_ms:'', allRTs_ms:'', interClickRTs_ms:'', totalTime_ms:'',
+        targetNumber: expected, clickedNumber: val, rtSincePrevCorrect_ms: rtSincePrev, absoluteTime_ms: absTime
+      };
+      gridTrials.push(rec); allRows.push(rec);
+
+      if (correct){
+        el.classList.add('correct'); tPrevCorrect = now; gridTarget++;
+        $('target').textContent = fmt2(gridTarget);
+        $('progress').textContent = `${Math.min(gridTarget, TOTAL_NUMBERS)} / ${TOTAL_NUMBERS}`;
+        if (gridTarget >= TOTAL_NUMBERS) gridEnd();
+      } else {
+        gridErrors++; $('errors').textContent = String(gridErrors);
+        el.classList.add('wrong'); setTimeout(()=>el.classList.remove('wrong'),180);
+      }
+    }
+    function gridBegin(){
+      gridTrials=[]; gridTarget=0; gridErrors=0; gridClicks=0; gridRunning=true; $('gridPost').textContent='';
+      $('btnStartGrid').disabled=true; $('confirmGrid').disabled=true; $('btnDownload').disabled=true; $('btnNew').disabled=true;
+      $('errors').textContent='0'; $('target').textContent='00'; $('progress').textContent='0 / 100'; $('gridStatus').textContent='';
+      gridBuild(); tStart=performance.now(); tPrevCorrect=null; const deadline=Date.now()+LIMIT_MS; $('timer').textContent='04:00';
+      gridTimer=setInterval(()=>{ const left=deadline-Date.now(); const m=Math.max(0,Math.floor(left/60000)); const s=Math.max(0,Math.floor((left%60000)/1000));
+        $('timer').textContent = `${fmt2(m)}:${fmt2(s)}`; if(left<=0){ clearInterval(gridTimer); gridEnd(); } },200);
+    }
+    function gridEnd(){
+      if (!gridRunning) return; gridRunning=false; clearInterval(gridTimer);
+      const highest = Math.min(gridTarget, TOTAL_NUMBERS-1);
+      $('gridStatus').textContent = T.grid_finished(highest);
+
+      // Post Grid rows
+      postToSheets(gridTrials);
+
+      // enable downloads + new participant + show thanks
+      $('btnDownload').disabled=false; $('btnNew').disabled=false;
+      // also show final screen with combined CSV
+      hide('screen-grid'); show('screen-thanks');
+    }
+
+    // ===== Wiring / UI =====
+    function resetForNew(){
+      // reset state
+      sessionId = null; allRows = [];
+      // clear UI
+      $('confirmBattery').checked=false; $('btnStartBattery').disabled=true;
+      $('participantId').disabled=false; $('computerId').disabled=false; $('lang').disabled=false;
+      $('participantId').value=''; // keep PC ID if you prefer; comment next line to keep
+      // $('computerId').value='';
+      hide('screen-corsi'); hide('screen-grid'); hide('screen-thanks'); show('screen-landing');
+    }
+
+    function init(){
+      setLang('en');
+      $('lang').addEventListener('change', e=> setLang(e.target.value));
+      $('confirmBattery').addEventListener('change', gateStartBattery);
+      $('participantId').addEventListener('input', gateStartBattery);
+      $('computerId').addEventListener('input', gateStartBattery);
+
+      $('btnStartBattery').addEventListener('click', ()=>{
+        sessionId = crypto.randomUUID();
+        // lock landing inputs
+        $('participantId').disabled=true; $('computerId').disabled=true; $('lang').disabled=true;
+        hide('screen-landing'); show('screen-corsi');
+      });
+
+      $('confirmCorsi').addEventListener('change', ()=>{ $('btnStartCorsi').disabled = !$('confirmCorsi').checked; });
+      $('btnStartCorsi').addEventListener('click', corsiBegin);
+
+      $('confirmGrid').addEventListener('change', ()=>{ $('btnStartGrid').disabled = !$('confirmGrid').checked; });
+      $('btnStartGrid').addEventListener('click', gridBegin);
+
+      $('btnDownload').addEventListener('click', finalCSV);
+      $('btnNew').addEventListener('click', resetForNew);
+      $('btnDownload2').addEventListener('click', finalCSV);
+      $('btnNew2').addEventListener('click', resetForNew);
+    }
+    init();
+  </script>
+</body>
+</html>
