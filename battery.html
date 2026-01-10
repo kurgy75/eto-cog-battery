@@ -159,7 +159,8 @@
 
   <script>
   const TRIAL_WAVE = "T2";
-  const SAVED_LANG = localStorage.getItem("ETO_LANG") || "hu";
+  const SAVED_LANG_RAW = localStorage.getItem("ETO_LANG") || "en";
+  const SAVED_LANG = (SAVED_LANG_RAW === "hu" || SAVED_LANG_RAW === "en") ? SAVED_LANG_RAW : "en";
     // ===== i18n =====
     const I18N = {
       en: {
@@ -273,7 +274,11 @@
 
     // ===== Shared state =====
     let lang = SAVED_LANG,
-    T = I18N[SAVED_LANG] || I18N.en;
+    T = I18N[lang] || I18N.en;
+    // Apply language consistently using existing logic
+    setLang(lang);
+    const sel = $("lang");
+    if (sel) sel.value = lang;
     let sessionId = null;
     let allRows = []; // combined logs from both tasks for the final CSV
 
@@ -558,3 +563,4 @@
 </body>
 
 </html>
+
