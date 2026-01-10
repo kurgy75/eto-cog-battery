@@ -158,8 +158,8 @@
   </div>
 
   <script>
-  const TRIAL_WAVE = "T2";   // second measurement wave
-  const lang = localStorage.getItem("ETO_LANG") || "hu";
+  const TRIAL_WAVE = "T2";
+  const SAVED_LANG = localStorage.getItem("ETO_LANG") || "hu";
     // ===== i18n =====
     const I18N = {
       en: {
@@ -272,7 +272,8 @@
     const LIMIT_MS = 4 * 60 * 1000;
 
     // ===== Shared state =====
-    let lang = 'en', T = I18N.en;
+    let lang = SAVED_LANG,
+    T = I18N[SAVED_LANG] || I18N.en;
     let sessionId = null;
     let allRows = []; // combined logs from both tasks for the final CSV
 
@@ -555,4 +556,5 @@
     init();
   </script>
 </body>
+
 </html>
