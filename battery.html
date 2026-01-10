@@ -179,16 +179,22 @@
     </section>
 
     <!-- Thanks -->
-    <section id="screen-thanks" class="hidden">
-      <div class="card">
-        <h2 id="t_thanks_title">All done — thank you!</h2>
-        <p class="muted" id="t_thanks_body">Your data has been recorded. You can download your CSV or start a new participant.</p>
-        <div class="row">
-          <button id="btnDownload2"><span id="t_download2">Download CSV</span></button>
-          <button id="btnNew2"><span id="t_new2">New participant</span></button>
-        </div>
-      </div>
-    </section>
+<section id="screen-thanks" class="hidden">
+  <div class="card">
+    <h2 id="t_thanks_title">All done — thank you!</h2>
+    <p class="muted" id="t_thanks_body">Your data has been recorded. You can download your CSV or start a new participant.</p>
+
+    <div class="row">
+      <a id="btnQuestionnaire2" class="btn primary" href="#" target="_blank" rel="noopener">
+        <span id="t_questionnaire2">Questionnaire</span>
+      </a>
+
+      <button id="btnDownload2"><span id="t_download2">Download CSV</span></button>
+      <button id="btnNew2"><span id="t_new2">New participant</span></button>
+    </div>
+  </div>
+</section>
+
   </div>
 
   <script>
@@ -737,16 +743,20 @@
     }
 
     function tpEnd(){
-      tpRunning = false;
-      const dur = Math.round((Date.now() - tpStartWall)/1000);
-      $('tpStatus').textContent = T.tp_finished(dur);
+  tpRunning = false;
+  const dur = Math.round((Date.now() - tpStartWall)/1000);
+  $('tpStatus').textContent = T.tp_finished(dur);
 
-      // Post TP rows
-      postToSheets(tpRows);
+  // Post TP rows
+  postToSheets(tpRows);
 
-      // go to thanks
-      hide('screen-tp'); show('screen-thanks');
-    }
+  // ✅ Questionnaire link at the end (language-specific)
+  const q = $('btnQuestionnaire2');
+  if (q) q.href = (lang === 'hu') ? FORM_HU : FORM_EN;
+
+  // go to thanks
+  hide('screen-tp'); show('screen-thanks');
+}
 
     // ===== Wiring / UI =====
     function resetForNew(){
@@ -800,3 +810,4 @@
   </script>
 </body>
 </html>
+
