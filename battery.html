@@ -1,108 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ETO Battery — Corsi + Grid + Go/No-Go</title>
+  <meta charset="UTF-8" />
+  <title>Sport Cognition Battery — Corsi + Number Grid</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    :root { --card:#fff; --border:#ddd; --txt:#111; --muted:#555; --ok:#0a7; --warn:#b60; --err:#c33; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#fafafa; color:var(--txt); }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
-    .card { background: var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; margin: 14px 0; box-shadow: 0 2px 10px rgba(0,0,0,.03); }
-    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
-    label { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-    input, select { padding:10px 10px; border-radius:12px; border:1px solid var(--border); font-size: 14px; }
-    button, .btn { padding: 10px 14px; border-radius: 12px; border: 1px solid #111; background: #fff; cursor:pointer; font-size: 14px; }
-    .btn.primary, button.primary { background:#111; color:#fff; }
-    button:disabled { opacity:.45; cursor:not-allowed; }
-    h1,h2 { margin: 6px 0 10px; }
-    .muted { color: var(--muted); }
-    .ok { color: var(--ok); }
-    .warn { color: var(--warn); }
-    .err { color: var(--err); }
-    .center { display:flex; justify-content:center; align-items:center; }
-    .hidden { display:none !important; }
+    :root { --card:#fff; --line:#e5e7eb; --ink:#1d2733; --muted:#64748b; --blue:#1d4ed8; }
+    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f6f7fb; color:var(--ink); margin:0; }
+    .wrap { max-width: 1100px; margin: 24px auto 48px; padding: 0 16px; }
+    h1,h2 { margin: 8px 0 6px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:0 2px 10px rgba(0,0,0,.03); }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:10px 0 6px; }
+    input[type="text"] { padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; min-width:220px; }
+    select { padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; }
+    button { padding:10px 16px; border-radius:10px; border:1px solid var(--blue); background:var(--blue); color:#fff; cursor:pointer; font-weight:600; }
+    button[disabled] { opacity:.5; cursor:not-allowed; }
+    .muted { color:var(--muted); font-size:14px; }
+    .pill { display:inline-block; padding:4px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; font-weight:600; }
+    .divider { height:1px; background:var(--line); margin:14px 0; }
+    .ok { color:#16a34a; } .warn { color:#b45309; } .err { color:#dc2626; }
+    .hidden { display:none; }
 
     /* Corsi board */
-    .board {
-      position: relative;
-      width: 640px;
-      height: 420px;
-      max-width: 92vw;
-      aspect-ratio: 64/42;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      margin: 10px auto;
-      background: #fff;
-      overflow: hidden;
-    }
-    .block {
-      position:absolute;
-      width: 78px;
-      height: 78px;
-      border-radius: 14px;
-      border: 2px solid #111;
-      background: #f7f7f7;
-      box-sizing: border-box;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      user-select:none;
-      touch-action: manipulation;
-    }
-    .block.flash { background:#111; }
-    .block.hit { outline: 4px solid #2a7; }
-    .block.miss { outline: 4px solid #c33; }
+    .board { position: relative; width: 600px; height: 500px; margin: 16px auto; background:#fff; border:2px solid var(--line); border-radius:14px; }
+    .block { position:absolute; width:84px; height:84px; background:#d7dee9; border-radius:12px; cursor:pointer;
+             transition: transform .08s ease, background-color .15s ease; box-shadow: inset 0 0 0 2px #c6cfdb; }
+    .block:active { transform: scale(.98); }
+    .highlight { background:#ffe66d !important; box-shadow: inset 0 0 0 2px #f7c948; }
+    .clicked { background:#badeff !important; box-shadow: inset 0 0 0 2px #82b7f5; }
 
-    /* Grid */
-    .gridWrap { display:flex; justify-content:center; }
-    .grid {
-      display:grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 6px;
-      width: min(92vw, 720px);
-      user-select:none;
-    }
-    .cell {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 0;
-      text-align:center;
-      font-variant-numeric: tabular-nums;
-      background:#fff;
-      cursor:pointer;
-      touch-action: manipulation;
-    }
-    .cell.done { background:#eee; color:#999; cursor:default; }
-    .cell.bad { outline: 3px solid #c33; }
-    .cell.good { outline: 3px solid #2a7; }
-
-    /* TP */
-    #tpStim svg { display:block; }
-    .bigHint { font-size: 18px; }
-
-    @media (max-width: 760px) {
-      .grid { grid-template-columns: repeat(5, 1fr); }
-      .cell { padding: 16px 0; font-size: 18px; }
-      .block { width: 64px; height: 64px; }
-    }
+    /* Number Grid */
+    .grid { display:grid; grid-template-columns: repeat(10, 1fr); gap:8px; margin: 16px 0; }
+    .cell { user-select:none; display:flex; align-items:center; justify-content:center; height:58px; background:#ffffff; border:1px solid #d7dee9; border-radius:10px;
+            font-variant-numeric: tabular-nums; font-weight:700; font-size:18px; cursor:pointer; transition: transform .05s ease, background .15s ease, border-color .15s ease; }
+    .cell:active { transform: scale(.98); }
+    .cell.correct { background:#dcfce7; border-color:#86efac; }
+    .cell.wrong { background:#fee2e2; border-color:#fca5a5; }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <h1 id="t_app_title">Sport Cognition Battery</h1>
 
-    <div class="card">
-      <h1>ETO Battery</h1>
-      <p class="muted" id="topNotice">
-        Please use Chrome on a laptop/tablet if possible.
-      </p>
-      <p class="muted" id="postStatus"></p>
-    </div>
-
-    <!-- Landing (inside battery): ID + consent -->
+    <!-- Landing -->
     <section id="screen-landing" class="card">
       <h2 id="t_landing_title">Welcome</h2>
-
       <div class="row">
         <label><span id="t_participant">Participant ID</span>:
           <input id="participantId" type="text" placeholder="e.g., P0123" />
@@ -117,898 +59,744 @@
           </select>
         </label>
       </div>
-
-      <div style="margin-top:12px;">
-        <label>
-          <input id="consent" type="checkbox" />
-          <span id="t_consent">I understand and agree to participate.</span>
-        </label>
+      <details open>
+        <summary id="t_battery_h">About this session</summary>
+        <div class="muted" id="t_battery_body" style="margin-top:8px; line-height:1.5;">
+          • You will complete two tasks in this order: <b>Corsi</b> → <b>Number Grid</b>.<br/>
+          • Please work quickly and accurately. Reaction times and accuracy are recorded.<br/>
+          • Use the same computer and Chrome browser when possible.
+        </div>
+      </details>
+      <div class="row">
+        <label class="muted"><input type="checkbox" id="confirmBattery" /> <span id="t_confirm_battery">I have read the instructions.</span></label>
       </div>
-
-      <div class="row" style="margin-top:12px;">
-        <button id="btnStart" class="primary" disabled>Start</button>
+      <div class="row">
+        <button id="btnStartBattery" disabled><span id="t_start_battery">Start — Corsi</span></button>
       </div>
-
-      <p class="muted" id="t_landing_hint" style="margin-top:10px;"></p>
     </section>
 
     <!-- Corsi -->
-    <section id="screen-corsi" class="card hidden">
-      <h2 id="t_corsi_title">Corsi Block Tapping</h2>
-      <p id="corsiInstr" class="bigHint"></p>
-
-      <div class="row">
-        <button id="corsiBegin" class="primary">Begin</button>
-        <span class="muted" id="corsiStatus"></span>
+    <section id="screen-corsi" class="hidden">
+      <div class="card">
+        <h2 id="t_corsi_title">Corsi Block Tapping Task</h2>
+        <details open>
+          <summary id="t_corsi_h">Instructions (please read carefully)</summary>
+          <div class="muted" id="t_corsi_body" style="margin-top:8px; line-height:1.5;">
+            • Squares will light up one-by-one; watch the full sequence.<br/>
+            • Then click the squares in the <b>same order</b>.<br/>
+            • After a correct trial, the sequence gets longer. If you make a mistake, you retry the same length once. Two mistakes at the same length ends the task.<br/>
+            • Respond quickly and accurately; we record reaction times.
+          </div>
+        </details>
+        <div class="row">
+          <label class="muted"><input type="checkbox" id="confirmCorsi" /> <span id="t_confirm_corsi">I have read and understood these instructions.</span></label>
+        </div>
+        <div class="row">
+          <button id="btnStartCorsi" disabled><span id="t_start_corsi">Start Corsi</span></button>
+          <span id="corsiStatus" class="muted"></span>
+        </div>
       </div>
 
       <div class="board" id="corsiBoard" aria-label="Corsi board"></div>
 
-      <div class="row" style="margin-top:8px;">
-        <button id="corsiNext" class="primary hidden">Next</button>
+      <div class="card">
+        <div class="pill"><span id="t_live">Live status</span>: <span id="corsiLive">—</span></div>
+        <div class="muted" id="corsiInfo">Waiting…</div>
+        <div class="divider"></div>
+        <div class="muted" id="corsiPost"> </div>
       </div>
     </section>
 
-    <!-- Grid -->
-    <section id="screen-grid" class="card hidden">
-      <h2 id="t_grid_title">Number Grid</h2>
-      <p id="gridInstr" class="bigHint"></p>
-
-      <div class="row">
-        <button id="gridBegin" class="primary">Begin</button>
-        <span class="muted" id="gridStatus"></span>
-        <span class="muted" id="gridTimer"></span>
+    <!-- Number Grid -->
+    <section id="screen-grid" class="hidden">
+      <div class="card">
+        <h2 id="t_grid_title">Number Grid 00→99 (4 min)</h2>
+        <details open>
+          <summary id="t_grid_h">Instructions (please read carefully)</summary>
+          <div class="muted" id="t_grid_body" style="margin-top:8px; line-height:1.5;">
+            • A 10×10 grid shows numbers from <b>00</b> to <b>99</b> in random positions.<br/>
+            • Click the numbers in <b>ascending order</b>: 00, 01, 02, …, 99.<br/>
+            • You have <b>4 minutes</b>. Incorrect clicks are recorded but do not advance the target number.<br/>
+            • Reaction times are measured between correct clicks.
+          </div>
+        </details>
+        <div class="row">
+          <label class="muted"><input type="checkbox" id="confirmGrid" /> <span id="t_confirm_grid">I have read and understood these instructions.</span></label>
+        </div>
+        <div class="row">
+          <button id="btnStartGrid" disabled><span id="t_start_grid">Start Number Grid</span></button>
+          <button id="btnDownload" disabled><span id="t_download">Download CSV</span></button>
+          <button id="btnNew" disabled><span id="t_new">New participant</span></button>
+          <span id="gridStatus" class="muted"></span>
+        </div>
       </div>
 
-      <div class="gridWrap">
-        <div class="grid" id="grid"></div>
+      <div class="card">
+        <div class="row">
+          <div class="pill"><span id="t_timer">Time left</span>: <span id="timer">04:00</span></div>
+          <div class="pill"><span id="t_target">Target</span>: <span id="target">00</span></div>
+          <div class="pill"><span id="t_errors">Errors</span>: <span id="errors">0</span></div>
+          <div class="pill"><span id="t_progress">Progress</span>: <span id="progress">0 / 100</span></div>
+        </div>
+        <div id="grid" class="grid" aria-label="Number grid"></div>
+        <div class="divider"></div>
+        <div class="muted" id="gridPost"> </div>
       </div>
     </section>
+
 
     <!-- TP Go/No-Go -->
-    <section id="screen-tp" class="card hidden">
-      <h2 id="t_tp_title">Go/No-Go</h2>
-      <p id="t_tp_intro" class="bigHint"></p>
-
-      <div class="row" style="gap:12px; align-items:center; flex-wrap:wrap;">
-        <button id="tpStart" class="primary">Start</button>
-        <span id="tpStatus" class="muted"></span>
+    <section id="screen-tp" class="hidden">
+      <div class="card">
+        <h2 id="t_tp_title">Go/No-Go (5 min)</h2>
+        <details open>
+          <summary id="t_tp_h">Instructions (please read carefully)</summary>
+          <div class="muted" id="t_tp_body" style="margin-top:8px; line-height:1.5;">
+            • Symbols will appear one-by-one.<br/>
+            • Press <b>SPACE</b> (or click/tap the symbol) ONLY for <b>target</b> symbols.<br/>
+            • Do NOT respond to non-target symbols.<br/>
+            • Speed matters, but accuracy matters more.
+          </div>
+        </details>
+        <div class="row">
+          <label class="muted"><input type="checkbox" id="confirmTP" /> <span id="t_confirm_tp">I have read and understood these instructions.</span></label>
+        </div>
+        <div class="row">
+          <button id="btnStartTP" disabled><span id="t_start_tp">Start Go/No-Go</span></button>
+          <span id="tpStatus" class="muted"></span>
+        </div>
       </div>
 
-      <div id="tpStage" style="margin-top:16px; display:flex; justify-content:center; align-items:center; min-height:260px;">
-        <div id="tpStim"></div>
+      <div class="card center" style="min-height:320px;">
+        <div id="tpStim" aria-label="TP stimulus"></div>
       </div>
 
-      <p class="muted" id="t_tp_hint" style="margin-top:10px;"></p>
-      <p class="muted" id="t_tp_resp" style="margin-top:6px;"></p>
+      <div class="card">
+        <div class="pill"><span id="t_tp_live">Live status</span>: <span id="tpLive">—</span></div>
+        <div class="divider"></div>
+        <div class="muted" id="tpPost"> </div>
+      </div>
     </section>
 
-    <!-- Finish -->
-    <section id="screen-finish" class="card hidden">
-      <h2 id="t_finish_title">Finished</h2>
-      <p id="t_finish_text"></p>
-
-      <div class="row">
-        <a id="btnQuestionnaire" class="btn primary" href="#" target="_blank" rel="noopener">Questionnaire</a>
-        <button id="btnDownloadCSV">Download CSV backup</button>
+    <!-- Thanks -->
+    <section id="screen-thanks" class="hidden">
+      <div class="card">
+        <h2 id="t_thanks_title">All done — thank you!</h2>
+        <p class="muted" id="t_thanks_body">Your data has been recorded. You can download your CSV or start a new participant.</p>
+        <div class="row">
+          <button id="btnDownload2"><span id="t_download2">Download CSV</span></button>
+          <button id="btnNew2"><span id="t_new2">New participant</span></button>
+        </div>
       </div>
-
-      <p class="muted" id="t_finish_hint" style="margin-top:10px;"></p>
     </section>
-
   </div>
 
-<script>
-/* =======================
-   CONFIG — EDIT THESE
-======================= */
+  <script>
+  const TRIAL_WAVE = "T2";   // second measurement wave
+    // ===== i18n =====
+    const I18N = {
+      en: {
+        app_title: "Sport Cognition Battery",
+        landing_title: "Welcome",
+        participant: "Participant ID",
+        computer: "Computer ID",
+        language: "Language",
+        battery_h: "About this session",
+        battery_body:
+          "• You will complete two tasks in this order: <b>Corsi</b> → <b>Number Grid</b>.<br/>" +
+          "• Please work quickly and accurately. Reaction times and accuracy are recorded.<br/>" +
+          "• Use the same computer and Chrome browser when possible.",
+        confirm_battery: "I have read the instructions.",
+        start_battery: "Start — Corsi",
 
-// Paste your Apps Script Web App URL here (the one ending with /exec).
-// Example: https://script.google.com/macros/s/XXXXX/exec
+        corsi_title: "Corsi Block Tapping Task",
+        corsi_h: "Instructions (please read carefully)",
+        corsi_body:
+          "• Squares will light up one-by-one; watch the full sequence.<br/>" +
+          "• Then click the squares in the <b>same order</b>.<br/>" +
+          "• After a correct trial, the sequence gets longer. If you make a mistake, you retry the same length once. Two mistakes at the same length ends the task.<br/>" +
+          "• Respond quickly and accurately; we record reaction times.",
+        confirm_corsi: "I have read and understood these instructions.",
+        start_corsi: "Start Corsi",
+        live: "Live status",
+        corsi_finished: s => `Corsi finished. Final span: ${s}`,
+        corsi_info2: "Proceeding to the next task…",
 
-// BATTERY VERSION MARKER (remove if you want)
-  console.log("BATTERY VERSION: 2026-01-10 14:06");
+        grid_title: "Number Grid 00→99 (4 min)",
+        grid_h: "Instructions (please read carefully)",
+        grid_body:
+          "• A 10×10 grid shows numbers from <b>00</b> to <b>99</b> in random positions.<br/>" +
+          "• Click the numbers in <b>ascending order</b>: 00, 01, 02, …, 99.<br/>" +
+          "• You have <b>4 minutes</b>. Incorrect clicks are recorded but do not advance the target number.<br/>" +
+          "• Reaction times are measured between correct clicks.",
+        confirm_grid: "I have read and understood these instructions.",
+        start_grid: "Start Number Grid",
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw3ZQ1bLj9EG6GD4MPpLLzQ1sTIU9OjBazJfG2tKTxyT1KyElmjEca36IF4fdZpo5nxwg/exec";
+        timer: "Time left", target: "Target", errors: "Errors", progress: "Progress",
+        posting: "Sending data to Google Sheets…",
+        posted: "Data sent to Google Sheets.",
+        posterr: "Could not send to Google Sheets (saved CSV locally).",
+        grid_finished: n => `Number Grid finished. Highest number reached: ${n}`,
+        thanks_title: "All done — thank you!",
+        thanks_body: "Your data has been recorded. You can download your CSV or start a new participant.",
+        download: "Download CSV", download2: "Download CSV", new: "New participant", new2: "New participant"
+      
+        ,
+        tp_title: "Go/No-Go (5 min)",
+        tp_h: "Instructions (please read carefully)",
+        tp_body:
+          "• Symbols appear one-by-one.\n" +
+          "• Press <b>SPACE</b> (or click/tap) ONLY for <b>target</b> symbols.\n" +
+          "• Do NOT respond to non-target symbols.\n" +
+          "• Targets are the four <b>corner</b> symbols (up+right, up+left, down+right, down+left).",
+        confirm_tp: "I have read and understood these instructions.",
+        start_tp: "Start Go/No-Go",
+        tp_live: "Live status",
+        tp_finished: d => `Go/No-Go finished. Duration: ${d} sec`
+},
+      hu: {
+        app_title: "Sportkognitív tesztcsomag",
+        landing_title: "Üdvözöljük",
+        participant: "Résztvevő azonosító",
+        computer: "Számítógép azonosító",
+        language: "Nyelv",
+        battery_h: "A feladatról",
+        battery_body:
+          "• Két feladat következik ebben a sorrendben: <b>Corsi</b> → <b>Számtábla</b>.<br/>" +
+          "• Kérjük, dolgozzon gyorsan és pontosan. A reakcióidőket és a pontosságot rögzítjük.<br/>" +
+          "• Lehetőleg ugyanazt a gépet és Chrome böngészőt használja.",
+        confirm_battery: "Elolvastam az útmutatót.",
+        start_battery: "Indítás — Corsi",
 
-// Questionnaire links
-const FORM_HU = "https://docs.google.com/forms/d/1KcXUHSDgzjEB64LFnpXH0Sa0tG4YSoG-39E_2RHor40/";
-const FORM_EN = "https://docs.google.com/forms/d/1NENoY5RpnPbr3fnxPKTN-5R4UpdWPpwg_IcsJ6aap24/";
+        corsi_title: "Corsi-blokk koppintási feladat",
+        corsi_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+        corsi_body:
+          "• Négyzetek fognak egymás után röviden felvillanni; figyelje a teljes sorrendet.<br/>" +
+          "• Ezután koppintsa/kattintsa végig <b>ugyanabban a sorrendben</b>!<br/>" +
+          "• Helyes válasz után a sorozat hossza nő. Ha hibázik, ugyanazt a hosszt még egyszer megismételjük. Két hiba ugyanazon a hosszon megszakítja a feladatot.<br/>" +
+          "• Próbáljon gyorsan és pontosan válaszolni; a reakcióidőket rögzítjük.",
+        confirm_corsi: "Elolvastam és megértettem az útmutatót.",
+        start_corsi: "Corsi indítása",
+        live: "Állapot",
+        corsi_finished: s => `Corsi vége. Végső span: ${s}`,
+        corsi_info2: "Következő feladatra lépés…",
 
-// Measurement wave label
-const TRIAL_WAVE = "T2";
+        grid_title: "Számtábla 00→99 (4 perc)",
+        grid_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+        grid_body:
+          "• Egy 10×10-es táblán <b>00</b>-tól <b>99</b>-ig szerepelnek a számok véletlen sorrendben.<br/>" +
+          "• Kattintson <b>növekvő sorrendben</b>: 00, 01, 02, …, 99.<br/>" +
+          "• <b>4 perc</b> áll rendelkezésre. A hibás kattintásokat rögzítjük, de nem léptetik előre a célszámot.<br/>" +
+          "• A reakcióidőt a helyes kattintások között mérjük.",
+        confirm_grid: "Elolvastam és megértettem az útmutatót.",
+        start_grid: "Számtábla indítása",
 
-/* =======================
-   HELPERS + I18N
-======================= */
-const $ = id => document.getElementById(id);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const fmt2 = n => (n < 10 ? '0'+n : ''+n);
-
-const I18N = {
-  en: {
-    topNotice: "Please use Chrome on a laptop/tablet if possible.",
-    landing_title: "Welcome",
-    participant: "Participant ID",
-    computer: "Computer ID",
-    language: "Language",
-    consent: "I understand and agree to participate.",
-    landing_hint: "You will complete 3 tasks: Corsi → Number Grid → Go/No-Go. Then open the questionnaire.",
-    start: "Start",
-
-    corsi_title: "Corsi Block Tapping",
-    corsi_instr: "Watch the blocks light up, then click the same sequence in the same order.",
-    corsi_begin: "Begin",
-    corsi_next: "Next",
-    corsi_showing: "Showing sequence…",
-    corsi_yourturn: "Your turn.",
-    corsi_correct: "Correct.",
-    corsi_wrong: "Wrong.",
-    corsi_done: "Corsi finished.",
-
-    grid_title: "Number Grid (00–99)",
-    grid_instr: "Click numbers in ascending order: 00, 01, 02 … as fast and accurately as possible. You have 4 minutes.",
-    grid_begin: "Begin",
-    grid_running: "Running…",
-    grid_done: "Grid finished.",
-
-    tp_title: "Go/No-Go (Attention & Inhibition)",
-    tp_intro: "Symbols appear one by one for 5 minutes. Press SPACE (or tap/click the symbol) ONLY when the symbol is a target. Do NOT respond to non-targets.",
-    tp_hint: "Targets are the 4 corner-type symbols (NE, NW, SE, SW).",
-    tp_resp: "Response: SPACE key or click/tap the symbol.",
-    tp_start: "Start",
-    tp_running: "Running…",
-    tp_done: "Done.",
-
-    finish_title: "Finished",
-    finish_text: "Thank you! Please open and complete the questionnaire.",
-    finish_hint: "If the questionnaire is already completed, you may close this tab.",
-    questionnaire: "Questionnaire",
-
-    posting: "Saving data to Google Sheets…",
-    posted: "Data sent to Google Sheets.",
-    posterr: "Could not confirm sending (this can be normal). CSV backup is available below."
-  },
-  hu: {
-    topNotice: "Lehetőleg Chrome böngészőben, laptopon/tableten töltsd ki.",
-    landing_title: "Üdvözlünk",
-    participant: "Résztvevő azonosító",
-    computer: "Gép azonosító",
-    language: "Nyelv",
-    consent: "Megértettem és hozzájárulok a részvételhez.",
-    landing_hint: "3 feladat következik: Corsi → Számrács → Go/No-Go. Ezután nyisd meg a kérdőívet.",
-    start: "Indítás",
-
-    corsi_title: "Corsi blokk-koppintás",
-    corsi_instr: "Figyeld a felvillanó blokkokat, majd kattints ugyanarra a sorrendre ugyanabban a sorrendben.",
-    corsi_begin: "Kezdés",
-    corsi_next: "Tovább",
-    corsi_showing: "Sorrend bemutatása…",
-    corsi_yourturn: "Te jössz.",
-    corsi_correct: "Helyes.",
-    corsi_wrong: "Hibás.",
-    corsi_done: "Corsi kész.",
-
-    grid_title: "Számrács (00–99)",
-    grid_instr: "Kattints növekvő sorrendben: 00, 01, 02 … minél gyorsabban és pontosabban. 4 perced van.",
-    grid_begin: "Kezdés",
-    grid_running: "Fut…",
-    grid_done: "Számrács kész.",
-
-    tp_title: "Go/No-Go (Figyelem és gátlás)",
-    tp_intro: "Szimbólumok jelennek meg egymás után 5 percig. Csak a célingereknél nyomj SPACE-t (vagy kattints/tapints). A többi esetben NE reagálj.",
-    tp_hint: "Célingerek: a 4 „sarok” jellegű szimbólum (NE, NW, SE, SW).",
-    tp_resp: "Válasz: SPACE billentyű vagy kattintás/tapintás a szimbólumon.",
-    tp_start: "Indítás",
-    tp_running: "Fut…",
-    tp_done: "Kész.",
-
-    finish_title: "Befejezve",
-    finish_text: "Köszönjük! Kérlek, nyisd meg és töltsd ki a kérdőívet.",
-    finish_hint: "Ha már kitöltötted a kérdőívet, bezárhatod ezt a lapot.",
-    questionnaire: "Kérdőív",
-
-    posting: "Adatok mentése a Google Sheets-be…",
-    posted: "Adatok elküldve a Google Sheets-be.",
-    posterr: "Nem sikerült visszaigazolni az elküldést (ez néha normális). CSV biztonsági mentés elérhető."
-  }
-};
-
-// language selection carry-over from landing page (index.html)
-const SAVED_LANG_RAW = localStorage.getItem("ETO_LANG") || "en";
-let lang = (SAVED_LANG_RAW === "hu" || SAVED_LANG_RAW === "en") ? SAVED_LANG_RAW : "en";
-let T = I18N[lang] || I18N.en;
-
-// global state
-let sessionId = null;
-let allRows = []; // every click/trial from every task
-
-function setLang(newLang) {
-  lang = (newLang === "hu" || newLang === "en") ? newLang : "en";
-  T = I18N[lang] || I18N.en;
-
-  document.documentElement.lang = lang;
-  $("topNotice").textContent = T.topNotice;
-
-  // landing labels
-  $("t_landing_title").textContent = T.landing_title;
-  $("t_participant").textContent = T.participant;
-  $("t_computer").textContent = T.computer;
-  $("t_language").textContent = T.language;
-  $("t_consent").textContent = T.consent;
-  $("t_landing_hint").textContent = T.landing_hint;
-  $("btnStart").textContent = T.start;
-
-  // Corsi
-  $("t_corsi_title").textContent = T.corsi_title;
-  $("corsiInstr").textContent = T.corsi_instr;
-  $("corsiBegin").textContent = T.corsi_begin;
-  $("corsiNext").textContent = T.corsi_next;
-
-  // Grid
-  $("t_grid_title").textContent = T.grid_title;
-  $("gridInstr").textContent = T.grid_instr;
-  $("gridBegin").textContent = T.grid_begin;
-
-  // TP
-  $("t_tp_title").textContent = T.tp_title;
-  $("t_tp_intro").textContent = T.tp_intro;
-  $("t_tp_hint").textContent  = T.tp_hint;
-  $("t_tp_resp").textContent  = T.tp_resp;
-  $("tpStart").textContent    = T.tp_start;
-
-  // Finish
-  $("t_finish_title").textContent = T.finish_title;
-  $("t_finish_text").textContent = T.finish_text;
-  $("t_finish_hint").textContent = T.finish_hint;
-  $("btnQuestionnaire").textContent = T.questionnaire;
-
-  // sync selector
-  const sel = $("lang");
-  if (sel) sel.value = lang;
-
-  // also store for future visits
-  localStorage.setItem("ETO_LANG", lang);
+        timer: "Hátralévő idő", target: "Cél", errors: "Hibák", progress: "Előrehaladás",
+        posting: "Adatok küldése a Google Sheets-be…",
+        posted: "Adatok elküldve a Google Sheets-be.",
+        posterr: "Nem sikerült elküldeni (CSV helyben mentve).",
+        grid_finished: n => `Számtábla vége. Elért legnagyobb szám: ${n}`,
+        thanks_title: "Köszönjük!",
+        thanks_body: "Az adatok rögzítésre kerültek. Letöltheti a CSV-t vagy indíthat új résztvevőt.",
+        download: "CSV letöltése", download2: "CSV letöltése", new: "Új résztvevő", new2: "Új résztvevő"
+      
+        ,
+        tp_title: "Go/No-Go (5 perc)",
+        tp_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+        tp_body:
+          "• Szimbólumok jelennek meg egymás után.\n" +
+          "• Csak a <b>célingereknél</b> nyomjon <b>SPACE</b>-t (vagy kattintson/tapintson).\n" +
+          "• A nem-cél ingereknél NE reagáljon.\n" +
+          "• Célingerek: a négy <b>sarok</b> szimbólum (fel+jobb, fel+bal, le+jobb, le+bal).",
+        confirm_tp: "Elolvastam és megértettem az útmutatót.",
+        start_tp: "Go/No-Go indítása",
+        tp_live: "Állapot",
+        tp_finished: d => `Go/No-Go vége. Időtartam: ${d} mp`
 }
+    };
 
-// apply initial language now (function exists)
-setLang(lang);
+    // ===== Config =====
+    const CSV_DELIM = ';';
+    const ADD_UTF8_BOM = true;
+    const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw3ZQ1bLj9EG6GD4MPpLLzQ1sTIU9OjBazJfG2tKTxyT1KyElmjEca36IF4fdZpo5nxwg/exec"; // ← paste your current Web App URL
 
-// ====== UI helpers ======
-function show(id) { $(id).classList.remove("hidden"); }
-function hide(id) { $(id).classList.add("hidden"); }
-function onlyShow(screenId) {
-  ["screen-landing","screen-corsi","screen-grid","screen-tp","screen-finish"].forEach(s => hide(s));
-  show(screenId);
-}
+    // Corsi config
+    const START_SPAN = 2;
+    const MAX_SPAN = 9;
+    const FLASH_MS = 650;
+    const ISI_MS = 850;
 
-function makeSessionId() {
-  // stable enough unique id: timestamp + random
-  return `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
-}
+    // Number Grid config
+    const TOTAL_NUMBERS = 100;
+    const LIMIT_MS = 4 * 60 * 1000;
 
-function validateLanding() {
-  const pid = $("participantId").value.trim();
-  const cid = $("computerId").value.trim();
-  const ok = pid.length >= 2 && cid.length >= 2 && $("consent").checked;
-  $("btnStart").disabled = !ok;
-}
+    // ===== Shared state =====
+    let lang = (localStorage.getItem("ETO_LANG") || "hu");
+    if (!(lang in I18N)) lang = 'en';
+    let T = I18N[lang];
+    let sessionId = null;
+    let allRows = []; // combined logs from both tasks for the final CSV
 
-// ====== Logging ======
-function baseRow(taskname) {
-  return {
-    timestamp: new Date().toISOString(),
-    lang: lang,
-    participantId: $("participantId").value.trim(),
-    computerId: $("computerId").value.trim(),
-    span: "",
-    sequence: "",
-    response: "",
-    correct: "",
-    firstRT_ms: "",
-    allRTs_ms: "",
-    interClickRTs_ms: "",
-    totalTime_ms: "",
-    sessionId: sessionId,
-    taskname: taskname,
-    trialIndex: "",
-    targetNumber: "",
-    clickedNumber: "",
-    rtSincePrevCorrect_ms: "",
-    absoluteTime_ms: Date.now(),
-    trialWave: TRIAL_WAVE
-  };
-}
+    // ===== Helpers =====
+    const $ = id => document.getElementById(id);
+    const fmt2 = n => (n < 10 ? '0'+n : ''+n);
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    function setLang(newLang) {
+      lang = newLang; T = I18N[lang];
+      // Landing
+      $('t_app_title').textContent = T.app_title;
+      $('t_landing_title').textContent = T.landing_title;
+      $('t_participant').textContent = T.participant;
+      $('t_computer').textContent = T.computer;
+      $('t_language').textContent = T.language;
+      $('t_battery_h').textContent = T.battery_h;
+      $('t_battery_body').innerHTML = T.battery_body;
+      $('t_confirm_battery').textContent = T.confirm_battery;
+      $('t_start_battery').textContent = T.start_battery;
+      // Corsi
+      $('t_corsi_title').textContent = T.corsi_title;
+      $('t_corsi_h').textContent = T.corsi_h;
+      $('t_corsi_body').innerHTML = T.corsi_body;
+      $('t_confirm_corsi').textContent = T.confirm_corsi;
+      $('t_start_corsi').textContent = T.start_corsi;
+      $('t_live').textContent = T.live;
+      // Grid
+      $('t_grid_title').textContent = T.grid_title;
+      $('t_grid_h').textContent = T.grid_h;
+      $('t_grid_body').innerHTML = T.grid_body;
+      $('t_confirm_grid').textContent = T.confirm_grid;
+      $('t_start_grid').textContent = T.start_grid;
+      $('t_timer').textContent = T.timer;
+      $('t_target').textContent = T.target;
+      $('t_errors').textContent = T.errors;
+      $('t_progress').textContent = T.progress;
 
-/* =======================
-   CORSI TASK
-======================= */
-const corsiPositionsPct = [
-  { left:  8, top:  8 },
-  { left: 42, top:  6 },
-  { left: 74, top: 10 },
-  { left: 22, top: 34 },
-  { left: 52, top: 34 },
-  { left:  8, top: 60 },
-  { left: 36, top: 56 },
-  { left: 70, top: 56 },
-  { left: 52, top: 78 }
-];
-
-let corsiBlocks = [];
-let corsiSpan = 2;
-let corsiTrialIndex = 0;
-let corsiSeq = [];
-let corsiClicks = [];
-let corsiFirstRT = null;
-let corsiClickTimes = []; // absolute performance.now times
-let corsiTrialStart = 0;
-let corsiErrorsAtSpan = 0;
-const CORSI_FLASH_MS = 600;
-const CORSI_GAP_MS = 250;
-
-function corsiBuildBoard() {
-  const board = $("corsiBoard");
-  board.innerHTML = "";
-  corsiBlocks = [];
-
-  for (let i=0;i<9;i++){
-    const d = document.createElement("div");
-    d.className = "block";
-    d.style.left = corsiPositionsPct[i].left + "%";
-    d.style.top  = corsiPositionsPct[i].top  + "%";
-    d.dataset.index = String(i);
-    d.addEventListener("click", () => corsiHandleClick(i, d));
-    board.appendChild(d);
-    corsiBlocks.push(d);
-  }
-}
-
-function corsiMakeSequence(span) {
-  const seq = [];
-  while (seq.length < span) {
-    const n = Math.floor(Math.random()*9);
-    if (seq.length === 0 || seq[seq.length-1] !== n) seq.push(n);
-  }
-  return seq;
-}
-
-async function corsiShowSequence(seq) {
-  $("corsiStatus").textContent = T.corsi_showing;
-  for (const idx of seq) {
-    const b = corsiBlocks[idx];
-    b.classList.add("flash");
-    await sleep(CORSI_FLASH_MS);
-    b.classList.remove("flash");
-    await sleep(CORSI_GAP_MS);
-  }
-  $("corsiStatus").textContent = T.corsi_yourturn;
-}
-
-function corsiStartTrial() {
-  corsiTrialIndex++;
-  corsiSeq = corsiMakeSequence(corsiSpan);
-  corsiClicks = [];
-  corsiFirstRT = null;
-  corsiClickTimes = [];
-  corsiTrialStart = performance.now();
-
-  corsiBlocks.forEach(b => { b.classList.remove("hit","miss"); });
-  $("corsiNext").classList.add("hidden");
-
-  corsiShowSequence(corsiSeq);
-}
-
-function corsiHandleClick(idx, el) {
-  // ignore clicks while showing sequence (simple heuristic: require status "Your turn")
-  if ($("corsiStatus").textContent === T.corsi_showing) return;
-
-  const now = performance.now();
-  if (corsiClicks.length === 0) corsiFirstRT = Math.round(now - corsiTrialStart);
-
-  corsiClicks.push(idx);
-  corsiClickTimes.push(now);
-
-  // feedback outline
-  const expected = corsiSeq[corsiClicks.length-1];
-  if (idx === expected) el.classList.add("hit");
-  else el.classList.add("miss");
-
-  if (corsiClicks.length === corsiSeq.length) corsiEvaluateTrial();
-}
-
-function corsiEvaluateTrial() {
-  const correct = corsiClicks.length === corsiSeq.length &&
-                  corsiClicks.every((v,i) => v === corsiSeq[i]);
-
-  const totalTime = Math.round(performance.now() - corsiTrialStart);
-
-  // allRTs: time since trial start at each click
-  const allRTs = corsiClickTimes.map(t => Math.round(t - corsiTrialStart)).join(";");
-
-  // interClick RTs: first is firstRT, then diffs
-  const inter = corsiClickTimes.map((t,i) => i===0 ? Math.round(t - corsiTrialStart)
-                                                   : Math.round(t - corsiClickTimes[i-1])).join(";");
-
-  // Log one row per Corsi trial (not per click)
-  const row = baseRow("Corsi");
-  row.span = corsiSpan;
-  row.sequence = corsiSeq.map(x => x+1).join("-"); // 1..9 for readability
-  row.response = corsiClicks.map(x => x+1).join("-");
-  row.correct = correct ? 1 : 0;
-  row.firstRT_ms = corsiFirstRT == null ? "" : corsiFirstRT;
-  row.allRTs_ms = allRTs;
-  row.interClickRTs_ms = inter;
-  row.totalTime_ms = totalTime;
-  row.trialIndex = corsiTrialIndex;
-
-  allRows.push(row);
-
-  $("corsiStatus").textContent = correct ? T.corsi_correct : T.corsi_wrong;
-
-  if (correct) {
-    corsiSpan += 1;
-    corsiErrorsAtSpan = 0;
-  } else {
-    corsiErrorsAtSpan += 1;
-  }
-
-  // stopping rule: two errors at same span OR span > 9
-  const done = corsiErrorsAtSpan >= 2 || corsiSpan > 9;
-
-  if (done) {
-    $("corsiStatus").textContent = T.corsi_done;
-    $("corsiNext").classList.remove("hidden");
-    $("corsiNext").textContent = T.corsi_next;
-  } else {
-    $("corsiNext").classList.remove("hidden");
-    $("corsiNext").textContent = T.corsi_next;
-  }
-}
-
-/* =======================
-   GRID TASK (00-99)
-======================= */
-const GRID_LIMIT_MS = 4 * 60 * 1000; // 4 minutes
-let gridNumbers = [];
-let gridExpected = 0;
-let gridStarted = false;
-let gridStartPerf = 0;
-let gridLastCorrectPerf = 0;
-let gridClickIndex = 0;
-let gridTimerHandle = null;
-
-function gridBuild() {
-  const el = $("grid");
-  el.innerHTML = "";
-  gridNumbers = Array.from({length:100}, (_,i)=>i);
-  // shuffle
-  for (let i=gridNumbers.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [gridNumbers[i], gridNumbers[j]] = [gridNumbers[j], gridNumbers[i]];
-  }
-  gridNumbers.forEach((n, pos) => {
-    const cell = document.createElement("div");
-    cell.className = "cell";
-    cell.textContent = fmt2(n);
-    cell.dataset.num = String(n);
-    cell.addEventListener("click", () => gridHandleClick(n, cell));
-    el.appendChild(cell);
-  });
-}
-
-function gridStart() {
-  gridBuild();
-  gridExpected = 0;
-  gridStarted = true;
-  gridStartPerf = performance.now();
-  gridLastCorrectPerf = gridStartPerf;
-  gridClickIndex = 0;
-  $("gridStatus").textContent = T.grid_running;
-  $("gridBegin").disabled = true;
-
-  // timer
-  if (gridTimerHandle) clearInterval(gridTimerHandle);
-  gridTimerHandle = setInterval(() => {
-    const elapsed = performance.now() - gridStartPerf;
-    const left = Math.max(0, GRID_LIMIT_MS - elapsed);
-    const sec = Math.ceil(left/1000);
-    $("gridTimer").textContent = `⏱ ${sec}s`;
-    if (left <= 0) gridEnd();
-  }, 200);
-}
-
-function gridHandleClick(n, cell) {
-  if (!gridStarted) return;
-  const now = performance.now();
-  const expected = gridExpected;
-
-  let correct = 0;
-  if (n === expected) {
-    correct = 1;
-    cell.classList.add("done");
-    cell.classList.remove("bad");
-    cell.classList.add("good");
-    gridExpected += 1;
-    gridLastCorrectPerf = now;
-  } else {
-    cell.classList.add("bad");
-    setTimeout(()=>cell.classList.remove("bad"), 250);
-  }
-
-  const rtSincePrev = Math.round(now - gridLastCorrectPerf); // if correct, this is ~0; so compute carefully
-  // better: RT since previous correct is time between correct clicks; for incorrect clicks, we still log since last correct.
-  const rtPrev = Math.round(now - (correct ? (now) : gridLastCorrectPerf));
-  // We'll log rtSincePrevCorrect_ms as time since last correct BEFORE this click.
-  const rtSincePrevCorrect = Math.round(now - (correct ? (now) : gridLastCorrectPerf));
-
-  // Correct measure: time since last correct *before* evaluating. Let's compute properly:
-  // Use a stored variable oldLastCorrectPerf before possible update.
-}
-
-function gridHandleClick(n, cell) {
-  if (!gridStarted) return;
-
-  const now = performance.now();
-  const expected = gridExpected;
-  const prevCorrectTime = gridLastCorrectPerf;
-
-  let correct = 0;
-  if (n === expected) {
-    correct = 1;
-    cell.classList.add("done");
-    cell.classList.remove("bad");
-    cell.classList.add("good");
-    gridExpected += 1;
-    gridLastCorrectPerf = now;
-  } else {
-    cell.classList.add("bad");
-    setTimeout(()=>cell.classList.remove("bad"), 250);
-  }
-
-  gridClickIndex += 1;
-
-  const rtSincePrevCorrect = Math.round(now - prevCorrectTime);
-  const totalElapsed = Math.round(now - gridStartPerf);
-
-  const row = baseRow("Grid");
-  row.trialIndex = gridClickIndex;
-  row.targetNumber = fmt2(expected);
-  row.clickedNumber = fmt2(n);
-  row.correct = correct;
-  row.firstRT_ms = "";           // not used for grid
-  row.rtSincePrevCorrect_ms = rtSincePrevCorrect;
-  row.totalTime_ms = totalElapsed; // cumulative from grid start
-  // keep sequence/response empty
-  allRows.push(row);
-
-  // stop if completed all numbers
-  if (gridExpected >= 100) gridEnd();
-}
-
-function gridEnd() {
-  if (!gridStarted) return;
-  gridStarted = false;
-  $("gridStatus").textContent = T.grid_done;
-  $("gridBegin").disabled = true;
-  if (gridTimerHandle) clearInterval(gridTimerHandle);
-  $("gridTimer").textContent = "";
-
-  // Proceed to TP screen
-  onlyShow("screen-tp");
-  tpInitScreen();
-}
-
-/* =======================
-   TP SYMBOLS + TASK
-======================= */
-function tickKey(ticks) { return ticks.slice().sort().join(""); }
-
-function makeTPSymbolSVG(ticks, size=140, stroke=6, tickLen=18) {
-  const pad = 18;
-  const x0 = pad, y0 = pad;
-  const x1 = size - pad, y1 = size - pad;
-  const midX = (x0 + x1) / 2;
-  const midY = (y0 + y1) / 2;
-
-  const lines = [];
-  ticks.forEach(t => {
-    if (t === "N") lines.push([midX, y0, midX, y0 - tickLen]);
-    if (t === "S") lines.push([midX, y1, midX, y1 + tickLen]);
-    if (t === "W") lines.push([x0, midY, x0 - tickLen, midY]);
-    if (t === "E") lines.push([x1, midY, x1 + tickLen, midY]);
-  });
-
-  const tickLines = lines.map(([xA,yA,xB,yB]) =>
-    `<line x1="${xA}" y1="${yA}" x2="${xB}" y2="${yB}" />`
-  ).join("");
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
-      <g fill="none" stroke="black" stroke-width="${stroke}" stroke-linecap="round">
-        <rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="6" ry="6"></rect>
-        ${tickLines}
-      </g>
-    </svg>
-  `;
-}
-
-const TP_GO_TARGETS = [
-  ["N","E"], ["N","W"], ["S","E"], ["S","W"]
-].map(t => ({ ticks: t, key: tickKey(t) }));
-const TP_GO_KEYS = new Set(TP_GO_TARGETS.map(x => x.key));
-
-const TP_NOGO_POOL = (function buildNoGoPool(){
-  const edges = ["N","E","S","W"];
-  const pool = [];
-
-  edges.forEach(e => pool.push({ ticks:[e], key: tickKey([e]) }));
-  [["N","E","S"], ["N","E","W"], ["N","S","W"], ["E","S","W"]].forEach(t => pool.push({ ticks:t, key: tickKey(t) }));
-
-  for (let i=0;i<edges.length;i++){
-    for (let j=i+1;j<edges.length;j++){
-      const ticks = [edges[i], edges[j]];
-      const key = tickKey(ticks);
-      if (!TP_GO_KEYS.has(key)) pool.push({ ticks, key });
+      // TP Go/No-Go
+      $('t_tp_title').textContent = T.tp_title;
+      $('t_tp_h').textContent = T.tp_h;
+      $('t_tp_body').innerHTML = T.tp_body.replace(/\n/g,'<br/>');
+      $('t_confirm_tp').textContent = T.confirm_tp;
+      $('t_start_tp').textContent = T.start_tp;
+      $('t_tp_live').textContent = T.tp_live;
+      // Thanks
+      $('t_thanks_title').textContent = T.thanks_title;
+      $('t_thanks_body').textContent = T.thanks_body;
+      $('t_download').textContent = T.download;
+      $('t_download2').textContent = T.download2;
+      $('t_new').textContent = T.new;
+      $('t_new2').textContent = T.new2;
+    
+      const sel = $('lang'); if (sel) sel.value = lang;
+      localStorage.setItem('ETO_LANG', lang);
     }
-  }
-  return pool;
-})();
+    function show(id){ $(id).classList.remove('hidden'); }
+    function hide(id){ $(id).classList.add('hidden'); }
 
-const TP_SOA_MS = 1000;
-const TP_TOTAL_TRIALS = 300;
-const TP_GO_RATIO = 0.75;
-
-let tpTrials = [];
-let tpIdx = 0;
-let tpRunning = false;
-let tpTrialStartPerf = 0;
-let tpResponded = false;
-let tpRT = null;
-
-function tpBuildTrials() {
-  const nGo = Math.round(TP_TOTAL_TRIALS * TP_GO_RATIO);
-  const nNoGo = TP_TOTAL_TRIALS - nGo;
-  const trials = [];
-
-  for (let i=0;i<nGo;i++){
-    const s = TP_GO_TARGETS[Math.floor(Math.random()*TP_GO_TARGETS.length)];
-    trials.push({ stimType:"GO", stimKey:s.key, ticks:s.ticks });
-  }
-  for (let i=0;i<nNoGo;i++){
-    const s = TP_NOGO_POOL[Math.floor(Math.random()*TP_NOGO_POOL.length)];
-    trials.push({ stimType:"NOGO", stimKey:s.key, ticks:s.ticks });
-  }
-
-  for (let i=trials.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [trials[i], trials[j]] = [trials[j], trials[i]];
-  }
-  return trials;
-}
-
-function tpInitScreen() {
-  $("tpStatus").textContent = "";
-  $("tpStim").innerHTML = "";
-  $("tpStart").disabled = false;
-}
-
-function tpRegisterResponse() {
-  if (!tpRunning) return;
-  if (tpResponded) return;
-  tpResponded = true;
-  tpRT = Math.round(performance.now() - tpTrialStartPerf);
-}
-
-function tpPresentTrial() {
-  if (!tpRunning) return;
-
-  if (tpIdx >= tpTrials.length) {
-    tpEndTask();
-    return;
-  }
-
-  const tr = tpTrials[tpIdx];
-  $("tpStim").innerHTML = makeTPSymbolSVG(tr.ticks);
-
-  tpResponded = false;
-  tpRT = null;
-  tpTrialStartPerf = performance.now();
-
-  setTimeout(tpFinalizeTrial, TP_SOA_MS);
-}
-
-function tpFinalizeTrial() {
-  if (!tpRunning) return;
-
-  const tr = tpTrials[tpIdx];
-  const responded = tpResponde? 1 : 0; // safeguard typo? We'll correct below.
-}
-
-function tpFinalizeTrial() {
-  if (!tpRunning) return;
-
-  const tr = tpTrials[tpIdx];
-  const responded = tpResponded ? 1 : 0;
-  const rt = tpRT; // null if no response
-
-  let correct = 0;
-  if (tr.stimType === "GO") correct = responded ? 1 : 0;
-  else correct = responded ? 0 : 1;
-
-  const row = baseRow("TP_GONOGO");
-  row.trialIndex = tpIdx + 1;
-  row.sequence = tr.stimKey;
-  row.targetNumber = tr.stimType;
-  row.clickedNumber = responded;
-  row.response = responded ? "press" : "none";
-  row.correct = correct;
-  row.firstRT_ms = (rt == null ? "" : rt);
-  row.totalTime_ms = TP_SOA_MS;
-  row.rtSincePrevCorrect_ms = (rt == null ? "" : rt);
-
-  allRows.push(row);
-
-  tpIdx++;
-  tpPresentTrial();
-}
-
-function tpStartTask() {
-  tpTrials = tpBuildTrials();
-  tpIdx = 0;
-  tpRunning = true;
-  $("tpStatus").textContent = T.tp_running;
-  $("tpStart").disabled = true;
-  tpPresentTrial();
-}
-
-function tpEndTask() {
-  tpRunning = false;
-  $("tpStatus").textContent = T.tp_done;
-  $("tpStim").innerHTML = "";
-
-  // proceed to finish + post
-  endBattery();
-}
-
-/* =======================
-   POSTING + FINISH
-======================= */
-function toCSV(rows) {
-  // ensure stable header order
-  const header = [
-    "timestamp","lang","participantId","computerId","span","sequence","response","correct",
-    "firstRT_ms","allRTs_ms","interClickRTs_ms","totalTime_ms","sessionId","taskname","trialIndex",
-    "targetNumber","clickedNumber","rtSincePrevCorrect_ms","absoluteTime_ms","trialWave"
-  ];
-  const esc = v => {
-    if (v == null) return "";
-    const s = String(v);
-    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
-    return s;
-  };
-  const lines = [header.join(",")];
-  for (const r of rows) {
-    lines.push(header.map(k => esc(r[k])).join(","));
-  }
-  return lines.join("\n");
-}
-
-async function postRowsToSheets(rows) {
-  if (!SHEETS_WEBAPP_URL || SHEETS_WEBAPP_URL.startsWith("PASTE_")) return;
-
-  $("postStatus").textContent = T.posting;
-  $("postStatus").className = "muted warn";
-
-  // Send as text/plain to avoid CORS preflight; Apps Script can parse JSON from contents.
-  const payload = JSON.stringify({ rows });
-  try {
-    await fetch(SHEETS_WEBAPP_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: payload
-    });
-    $("postStatus").textContent = T.posted;
-    $("postStatus").className = "muted ok";
-  } catch (e) {
-    console.warn("Sheets post failed:", e);
-    $("postStatus").textContent = T.posterr;
-    $("postStatus").className = "muted err";
-  }
-}
-
-function downloadCSVBackup() {
-  const csv = toCSV(allRows);
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `ETO_Battery_${$("participantId").value.trim()}_${TRIAL_WAVE}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
-}
-
-async function endBattery() {
-  // post to Sheets
-  await postRowsToSheets(allRows);
-
-  // setup questionnaire button
-  $("btnQuestionnaire").href = (lang === "hu") ? FORM_HU : FORM_EN;
-
-  onlyShow("screen-finish");
-}
-
-function startBattery() {
-  sessionId = makeSessionId();
-  allRows = [];
-
-  // save lang to localStorage (so landing choice persists)
-  localStorage.setItem("ETO_LANG", lang);
-
-  corsiBuildBoard();
-  onlyShow("screen-corsi");
-  $("corsiStatus").textContent = "";
-  $("corsiBegin").disabled = false;
-  $("corsiNext").classList.add("hidden");
-}
-
-function init() {
-  // sync dropdown + event
-  $("lang").addEventListener("change", e => setLang(e.target.value));
-
-  $("participantId").addEventListener("input", validateLanding);
-  $("computerId").addEventListener("input", validateLanding);
-  $("consent").addEventListener("change", validateLanding);
-
-  $("btnStart").addEventListener("click", startBattery);
-
-  // Corsi buttons
-  $("corsiBegin").addEventListener("click", () => {
-    $("corsiBegin").disabled = true;
-    corsiSpan = 2;
-    corsiTrialIndex = 0;
-    corsiErrorsAtSpan = 0;
-    corsiStartTrial();
-  });
-  $("corsiNext").addEventListener("click", () => {
-    // if done, go next; otherwise next trial
-    if ($("corsiStatus").textContent === T.corsi_done) {
-      onlyShow("screen-grid");
-      $("gridBegin").disabled = false;
-      $("gridStatus").textContent = "";
-      $("gridTimer").textContent = "";
-    } else {
-      corsiStartTrial();
+    function gateStartBattery() {
+      const ok = $('confirmBattery').checked &&
+                 $('participantId').value.trim().length > 0 &&
+                 $('computerId').value.trim().length > 0;
+      $('btnStartBattery').disabled = !ok;
     }
-  });
 
-  // Grid begin
-  $("gridBegin").addEventListener("click", gridStart);
-
-  // TP handlers
-  $("tpStart").addEventListener("click", tpStartTask);
-  $("tpStim").addEventListener("click", tpRegisterResponse);
-  window.addEventListener("keydown", (e) => {
-    if (e.code === "Space") {
-      e.preventDefault();
-      tpRegisterResponse();
+    function postToSheets(rows) {
+      if (!SHEETS_WEBAPP_URL || !rows.length) return;
+      const el = (rows[0].taskName === 'Corsi') ? $('corsiPost') : (rows[0].taskName === 'TP_GONOGO' ? $('tpPost') : $('gridPost'));
+      el.textContent = T.posting; el.className = "muted warn";
+      // no-cors simple POST
+      fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ trials: rows })
+      }).then(_ => { el.textContent = T.posted + " (check the Sheet)"; el.className = "muted ok"; })
+        .catch(e => { el.textContent = T.posterr + " ("+e+")"; el.className = "muted err"; });
     }
-  });
 
-  // Finish backup download
-  $("btnDownloadCSV").addEventListener("click", downloadCSVBackup);
+    function finalCSV() {
+      const header = [
+        'timestamp','lang','participantId','computerId','sessionId','taskName',
+        'trialIndex','span','sequence','response','correct',
+        'firstRT_ms','allRTs_ms','interClickRTs_ms','totalTime_ms',
+        'targetNumber','clickedNumber','rtSincePrevCorrect_ms','absoluteTime_ms','trialWave'
+      ];
+      const lines = [header.join(CSV_DELIM)];
+      for (const r of allRows) {
+        const row = header.map(h => (r[h] != null ? String(r[h]) : ''));
+        lines.push(row.join(CSV_DELIM));
+      }
+      const blob = new Blob([(ADD_UTF8_BOM ? '\uFEFF' : '') + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const pid = ($('participantId').value.trim() || 'UNKNOWN').replace(/[^A-Za-z0-9_-]/g, '');
+      const stamp = new Date().toISOString().replace(/[:.]/g,'-');
+      const fname = `battery_${pid}_${stamp}.csv`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
 
-  // prefill language from landing choice
-  const saved = localStorage.getItem("ETO_LANG");
-  if (saved === "hu" || saved === "en") setLang(saved);
+    // ===== Corsi implementation =====
+    const corsiPositions = [
+      { left: 50,  top: 40  },
+      { left: 250, top: 40  },
+      { left: 450, top: 40  },
+      { left: 150, top: 140 },
+      { left: 300, top: 160 },
+      { left: 50,  top: 300 },
+      { left: 200, top: 280 },
+      { left: 400, top: 280 },
+      { left: 300, top: 400 }
+    ];
+    let corsiBlocks = [], corsiCanClick=false, corsiSpan=START_SPAN, corsiFails=0, corsiSeq=[], corsiUser=[], corsiRTAll=[], corsiRTInter=[], corsiStartResp=null, corsiTrials=[], corsiRunning=false;
 
-  validateLanding();
-}
+    function corsiBuildBoard() {
+      const board = $('corsiBoard'); board.innerHTML = ''; corsiBlocks = [];
+      for (let i=0;i<9;i++){
+        const d = document.createElement('div');
+        d.className = 'block'; d.dataset.index=i;
+        d.style.left = corsiPositions[i].left + 'px';
+        d.style.top  = corsiPositions[i].top  + 'px';
+        d.addEventListener('click', () => corsiHandleClick(i,d));
+        board.appendChild(d); corsiBlocks.push(d);
+      }
+    }
+    function corsiMakeSeq(len){ const s=[]; while(s.length<len){ const r=Math.floor(Math.random()*9); if(!s.includes(r)) s.push(r);} return s; }
+    async function corsiPresent(seq){
+      corsiBlocks.forEach(b=>b.classList.remove('clicked'));
+      corsiCanClick=false; corsiUser=[]; corsiRTAll=[]; corsiRTInter=[]; corsiStartResp=null;
+      $('corsiInfo').textContent = (lang==='en'?`Watch the sequence (span ${seq.length})`:`Figyelje a sorozatot (hossz: ${seq.length})`);
+      for(let i=0;i<seq.length;i++){
+        const idx=seq[i]; corsiBlocks[idx].classList.add('highlight'); await sleep(FLASH_MS);
+        corsiBlocks[idx].classList.remove('highlight'); await sleep(Math.max(0, ISI_MS-FLASH_MS));
+      }
+      corsiCanClick = true;
+      $('corsiInfo').textContent = (lang==='en'?`Respond now: tap the sequence of ${seq.length} squares`:`Most válaszoljon: koppintsa a ${seq.length} négyzetet`);
+    }
+    function corsiHandleClick(idx, el){
+      if (!corsiCanClick) return;
+      const now = performance.now();
+      if (!corsiStartResp) corsiStartResp = now;
+      corsiUser.push(idx); el.classList.add('clicked');
+      const rel = Math.round(now - corsiStartResp);
+      corsiRTAll.push(rel);
+      if (corsiRTAll.length===1) corsiRTInter.push(rel);
+      else corsiRTInter.push(corsiRTAll[corsiRTAll.length-1]-corsiRTAll[corsiRTAll.length-2]);
+      if (corsiUser.length === corsiSeq.length) { corsiCanClick = false; corsiEval(); }
+    }
+    function corsiArraysEqual(a,b){ if(a.length!==b.length) return false; for(let i=0;i<a.length;i++) if(a[i]!==b[i]) return false; return true; }
+    function corsiEval(){
+      const correct = corsiArraysEqual(corsiUser, corsiSeq);
+      const firstRT = corsiRTAll.length ? corsiRTAll[0] : null;
+      const totalTime = corsiRTAll.length ? corsiRTAll[corsiRTAll.length-1] : null;
+      const rec = {
+        timestamp: new Date().toISOString(),
+        lang, participantId: $('participantId').value.trim(), computerId: $('computerId').value.trim(),
+        sessionId, taskName: 'Corsi',
+        trialIndex: corsiTrials.length+1,
+        span: corsiSeq.length,
+        sequence: corsiSeq.map(i=>i+1).join('-'),
+        response: corsiUser.map(i=>i+1).join('-'),
+        correct: correct?1:0,
+        firstRT_ms: firstRT, allRTs_ms: corsiRTAll.join(';'),
+        interClickRTs_ms: corsiRTInter.join(';'), totalTime_ms: totalTime,
+        targetNumber:'', clickedNumber:'', rtSincePrevCorrect_ms:'', absoluteTime_ms:'', trialWave: TRIAL_WAVE
+      };
+      corsiTrials.push(rec); allRows.push(rec);
 
-init();
-</script>
+      if (correct) { corsiFails=0; corsiSpan++; $('corsiInfo').textContent = (lang==='en'?`Correct ✅ — advancing to span ${corsiSpan}`:`Helyes ✅ — lépés a(z) ${corsiSpan} hosszra`); }
+      else { corsiFails++; $('corsiInfo').textContent = (lang==='en'?`Incorrect ❌ — ${corsiFails} / 2 errors at span ${corsiSpan}`:`Hibás ❌ — ${corsiFails} / 2 hiba ezen a hosszon (${corsiSpan})`); }
+
+      if (corsiFails>=2 || corsiSpan>MAX_SPAN) corsiEnd();
+      else { corsiSeq = corsiMakeSeq(corsiSpan); setTimeout(()=>corsiPresent(corsiSeq), 900); $('corsiLive').textContent = `${corsiSpan} (errors: ${corsiFails})`; }
+    }
+    function corsiBegin(){
+      corsiTrials=[]; corsiSpan=START_SPAN; corsiFails=0; corsiRunning=true;
+      $('corsiStatus').textContent='…'; $('corsiLive').textContent=`${corsiSpan}`; $('corsiInfo').textContent=''; $('corsiPost').textContent='';
+      $('btnStartCorsi').disabled=true; $('confirmCorsi').disabled=true;
+      corsiBuildBoard(); corsiSeq = corsiMakeSeq(corsiSpan); corsiPresent(corsiSeq);
+    }
+    function corsiEnd(){
+      corsiRunning=false;
+      const maxSpan = corsiTrials.filter(t=>t.correct===1).reduce((m,t)=>Math.max(m,t.span),0);
+      $('corsiStatus').textContent = T.corsi_finished(maxSpan);
+      $('corsiInfo').textContent = T.corsi_info2;
+
+      // Post Corsi rows
+      postToSheets(corsiTrials);
+
+      // Move to next task after short pause
+      setTimeout(()=>{ hide('screen-corsi'); show('screen-grid'); }, 800);
+    }
+
+    // ===== Number Grid implementation =====
+    let gridNumbers=[], gridCells=[], gridTarget=0, gridErrors=0, gridClicks=0, gridTrials=[], gridRunning=false, tStart=null, tPrevCorrect=null, gridTimer=null;
+
+    function gridBuild(){
+      const grid = $('grid'); grid.innerHTML=''; gridCells=[]; gridNumbers = Array.from({length:TOTAL_NUMBERS},(_,i)=>i);
+      for (let i=gridNumbers.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [gridNumbers[i],gridNumbers[j]]=[gridNumbers[j],gridNumbers[i]]; }
+      gridNumbers.forEach(v=>{
+        const d=document.createElement('div'); d.className='cell'; d.dataset.value=String(v); d.textContent=fmt2(v);
+        d.addEventListener('click', ()=>gridClick(v,d)); grid.appendChild(d); gridCells.push(d);
+      });
+    }
+    function gridClick(val, el){
+      if (!gridRunning) return;
+      const now = performance.now(); gridClicks++;
+      const expected = gridTarget;
+      const absTime = Math.round(now - tStart);
+      const rtSincePrev = (tPrevCorrect==null)?absTime:Math.round(now - tPrevCorrect);
+      const correct = (val===expected);
+
+      const rec = {
+        timestamp:new Date().toISOString(), lang, participantId:$('participantId').value.trim(), computerId:$('computerId').value.trim(),
+        sessionId, taskName:'NumberGrid',
+        trialIndex:gridClicks, span:'', sequence:'', response:'', correct: correct?1:0,
+        firstRT_ms:'', allRTs_ms:'', interClickRTs_ms:'', totalTime_ms:'',
+        targetNumber: expected, clickedNumber: val, rtSincePrevCorrect_ms: rtSincePrev, absoluteTime_ms: absTime, trialWave: TRIAL_WAVE
+      };
+      gridTrials.push(rec); allRows.push(rec);
+
+      if (correct){
+        el.classList.add('correct'); tPrevCorrect = now; gridTarget++;
+        $('target').textContent = fmt2(gridTarget);
+        $('progress').textContent = `${Math.min(gridTarget, TOTAL_NUMBERS)} / ${TOTAL_NUMBERS}`;
+        if (gridTarget >= TOTAL_NUMBERS) gridEnd();
+      } else {
+        gridErrors++; $('errors').textContent = String(gridErrors);
+        el.classList.add('wrong'); setTimeout(()=>el.classList.remove('wrong'),180);
+      }
+    }
+    function gridBegin(){
+      gridTrials=[]; gridTarget=0; gridErrors=0; gridClicks=0; gridRunning=true; $('gridPost').textContent='';
+      $('btnStartGrid').disabled=true; $('confirmGrid').disabled=true; $('btnDownload').disabled=true; $('btnNew').disabled=true;
+      $('errors').textContent='0'; $('target').textContent='00'; $('progress').textContent='0 / 100'; $('gridStatus').textContent='';
+      gridBuild(); tStart=performance.now(); tPrevCorrect=null; const deadline=Date.now()+LIMIT_MS; $('timer').textContent='04:00';
+      gridTimer=setInterval(()=>{ const left=deadline-Date.now(); const m=Math.max(0,Math.floor(left/60000)); const s=Math.max(0,Math.floor((left%60000)/1000));
+        $('timer').textContent = `${fmt2(m)}:${fmt2(s)}`; if(left<=0){ clearInterval(gridTimer); gridEnd(); } },200);
+    }
+    function gridEnd(){
+      if (!gridRunning) return; gridRunning=false; clearInterval(gridTimer);
+      const highest = Math.min(gridTarget, TOTAL_NUMBERS-1);
+      $('gridStatus').textContent = T.grid_finished(highest);
+
+      // Post Grid rows
+      postToSheets(gridTrials);
+
+      // enable downloads + new participant + show thanks
+      $('btnDownload').disabled=false; $('btnNew').disabled=false;
+      // also show final screen with combined CSV
+      hide('screen-grid'); show('screen-tp');
+    }
+
+
+    // ===== TP Go/No-Go implementation =====
+    const TP_DURATION_MS = 5 * 60 * 1000;
+    const TP_SOA_MS = 1000;      // total cycle
+    const TP_ISI_MS = 150;       // blank between stimuli (blink)
+    const TP_STIM_MS = TP_SOA_MS - TP_ISI_MS;
+    const TP_GO_RATIO = 0.75;
+
+    // target symbols: corners = up+right, up+left, down+right, down+left
+    const TP_GO_TARGETS = [
+      ['U','R'], ['U','L'], ['D','R'], ['D','L']
+    ];
+    const TP_NOGO_POOL = [
+      ['U'],['D'],['L'],['R'],
+      ['U','D'],['L','R'],
+      ['U','L','R'],['D','L','R'],['U','D','L'],['U','D','R'],
+      ['U','D','L','R']
+    ];
+
+    function tpKey(arr){ return arr.slice().sort().join(''); }
+
+    function tpMakeSVG(ticks, size=150, stroke=6, tickLen=18){
+      // draw a square with short ticks: U/D/L/R = up/down/left/right
+      const pad = 22;
+      const x0 = pad, y0 = pad;
+      const x1 = size - pad, y1 = size - pad;
+      const midX = (x0 + x1)/2, midY = (y0 + y1)/2;
+
+      const lines = [];
+      ticks.forEach(t=>{
+        if (t==='U') lines.push([midX,y0, midX, y0 - tickLen]);
+        if (t==='D') lines.push([midX,y1, midX, y1 + tickLen]);
+        if (t==='L') lines.push([x0,midY, x0 - tickLen, midY]);
+        if (t==='R') lines.push([x1,midY, x1 + tickLen, midY]);
+      });
+
+      const tickLines = lines.map(([xA,yA,xB,yB])=>`<line x1="${xA}" y1="${yA}" x2="${xB}" y2="${yB}" />`).join('');
+      return `
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+          <g fill="none" stroke="#111" stroke-width="${stroke}" stroke-linecap="round">
+            <rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="10" ry="10"></rect>
+            ${tickLines}
+          </g>
+        </svg>
+      `;
+    }
+
+    let tpRunning=false, tpTrials=[], tpIdx=0, tpStartWall=0, tpStartPerf=0, tpTrialStartPerf=0;
+    let tpResponded=false, tpRT=null, tpRows=[];
+
+    function tpBuildTrials(){
+      const n = Math.round(TP_DURATION_MS / TP_SOA_MS);
+      const nGo = Math.round(n * TP_GO_RATIO);
+      const nNo = n - nGo;
+
+      const trials = [];
+      for (let i=0;i<nGo;i++){
+        const t = TP_GO_TARGETS[Math.floor(Math.random()*TP_GO_TARGETS.length)];
+        trials.push({stimType:'GO', ticks:t, stimKey: tpKey(t)});
+      }
+      for (let i=0;i<nNo;i++){
+        const t = TP_NOGO_POOL[Math.floor(Math.random()*TP_NOGO_POOL.length)];
+        // ensure not accidentally a GO target
+        const key = tpKey(t);
+        if (key==='RU' || key==='LU' || key==='DR' || key==='DL') { i--; continue; }
+        trials.push({stimType:'NOGO', ticks:t, stimKey: key});
+      }
+      // shuffle
+      for (let i=trials.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [trials[i], trials[j]]=[trials[j], trials[i]];
+      }
+      return trials;
+    }
+
+    function tpRegisterResponse(){
+      if (!tpRunning) return;
+      if (tpResponded) return;
+      tpResponded = true;
+      tpRT = Math.round(performance.now() - tpTrialStartPerf);
+    }
+
+    function tpShowTrial(){
+      if (!tpRunning) return;
+      if (tpIdx >= tpTrials.length) { tpEnd(); return; }
+
+      const tr = tpTrials[tpIdx];
+
+      // show stimulus
+      $('tpStim').innerHTML = tpMakeSVG(tr.ticks);
+      tpResponded=false; tpRT=null;
+      tpTrialStartPerf = performance.now();
+
+      // hide stimulus after TP_STIM_MS to create a blink
+      setTimeout(()=>{ $('tpStim').innerHTML=''; }, TP_STIM_MS);
+
+      // finalize at end of SOA
+      setTimeout(tpFinalizeTrial, TP_SOA_MS);
+    }
+
+    function tpFinalizeTrial(){
+      if (!tpRunning) return;
+
+      const tr = tpTrials[tpIdx];
+      const responded = tpResponded ? 1 : 0;
+      const rt = tpRT; // null if none
+      let correct = 0;
+      if (tr.stimType === 'GO') correct = responded ? 1 : 0; // hit vs omission
+      else correct = responded ? 0 : 1;                      // commission vs correct reject
+
+      const rec = {
+        timestamp: new Date().toISOString(),
+        lang, participantId:$('participantId').value.trim(), computerId:$('computerId').value.trim(),
+        sessionId, taskName:'TP_GONOGO',
+        trialIndex: tpIdx + 1,
+        span:'', sequence: tr.stimKey, response: responded ? 'press' : 'none',
+        correct: correct,
+        firstRT_ms: (rt==null ? '' : rt),
+        allRTs_ms:'', interClickRTs_ms:'', totalTime_ms: TP_SOA_MS,
+        targetNumber: tr.stimType, clickedNumber: responded,
+        rtSincePrevCorrect_ms: (rt==null ? '' : rt),
+        absoluteTime_ms: Math.round(performance.now() - tpStartPerf),
+        trialWave: TRIAL_WAVE
+      };
+
+      tpRows.push(rec); allRows.push(rec);
+
+      tpIdx++;
+      const elapsed = Math.round((Date.now() - tpStartWall)/1000);
+      $('tpLive').textContent = `${tpIdx} / ${tpTrials.length} — ${elapsed}s`;
+      tpShowTrial();
+    }
+
+    function tpBegin(){
+      tpRows = [];
+      tpTrials = tpBuildTrials();
+      tpIdx = 0;
+      tpRunning = true;
+      tpStartWall = Date.now();
+      tpStartPerf = performance.now();
+      $('tpStatus').textContent = '…';
+      $('tpPost').textContent = '';
+      $('tpLive').textContent = `0 / ${tpTrials.length}`;
+      $('btnStartTP').disabled = true;
+      $('confirmTP').disabled = true;
+
+      tpShowTrial();
+    }
+
+    function tpEnd(){
+      tpRunning = false;
+      const dur = Math.round((Date.now() - tpStartWall)/1000);
+      $('tpStatus').textContent = T.tp_finished(dur);
+
+      // Post TP rows
+      postToSheets(tpRows);
+
+      // go to thanks
+      hide('screen-tp'); show('screen-thanks');
+    }
+
+    // ===== Wiring / UI =====
+    function resetForNew(){
+      // reset state
+      sessionId = null; allRows = [];
+      // clear UI
+      $('confirmBattery').checked=false; $('btnStartBattery').disabled=true;
+      $('participantId').disabled=false; $('computerId').disabled=false; $('lang').disabled=false;
+      $('participantId').value=''; // keep PC ID if you prefer; comment next line to keep
+      // $('computerId').value='';
+      hide('screen-corsi'); hide('screen-grid'); hide('screen-thanks'); show('screen-landing');
+    }
+
+    function init(){
+      setLang(lang);
+      const sel = $('lang'); if (sel) sel.value = lang;
+      $('lang').addEventListener('change', e=> setLang(e.target.value));
+      $('confirmBattery').addEventListener('change', gateStartBattery);
+      $('participantId').addEventListener('input', gateStartBattery);
+      $('computerId').addEventListener('input', gateStartBattery);
+
+      $('btnStartBattery').addEventListener('click', ()=>{
+        sessionId = crypto.randomUUID();
+        // lock landing inputs
+        $('participantId').disabled=true; $('computerId').disabled=true; $('lang').disabled=true;
+        hide('screen-landing'); show('screen-corsi');
+      });
+
+      $('confirmCorsi').addEventListener('change', ()=>{ $('btnStartCorsi').disabled = !$('confirmCorsi').checked; });
+      $('btnStartCorsi').addEventListener('click', corsiBegin);
+
+      $('confirmGrid').addEventListener('change', ()=>{ $('btnStartGrid').disabled = !$('confirmGrid').checked; });
+      $('btnStartGrid').addEventListener('click', gridBegin);
+
+
+      $('confirmTP').addEventListener('change', ()=>{ $('btnStartTP').disabled = !$('confirmTP').checked; });
+      $('btnStartTP').addEventListener('click', tpBegin);
+
+      // TP responses: SPACE key or click/tap symbol
+      $('tpStim').addEventListener('click', tpRegisterResponse);
+      window.addEventListener('keydown', (e)=>{
+        if (e.code === 'Space') { e.preventDefault(); tpRegisterResponse(); }
+      });
+
+      $('btnDownload').addEventListener('click', finalCSV);
+      $('btnNew').addEventListener('click', resetForNew);
+      $('btnDownload2').addEventListener('click', finalCSV);
+      $('btnNew2').addEventListener('click', resetForNew);
+    }
+    init();
+  </script>
 </body>
 </html>
