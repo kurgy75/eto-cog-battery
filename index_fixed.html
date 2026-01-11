@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ETO – Kognitív tesztcsomag</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 0; padding: 24px; line-height: 1.4; }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    .card { border: 1px solid #ddd; border-radius: 14px; padding: 18px; margin: 14px 0; }
+    .btn { display: inline-block; padding: 12px 16px; border-radius: 12px; border: 1px solid #111; text-decoration: none; cursor:pointer; }
+    .btn.primary { background: #111; color: #fff; }
+    .muted { color: #555; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>ETO – Kognitív tesztcsomag</h1>
+
+    <div class="card">
+      <h2>Language / Nyelv</h2>
+      <p>Choose your language (required) / Válassz nyelvet (kötelező):</p>
+      <div class="row">
+        <button class="btn" id="btnHU">Magyar</button>
+        <button class="btn" id="btnEN">English</button>
+      </div>
+      <p class="muted" id="langStatus" style="margin-top:10px;"></p>
+    </div>
+
+    <div class="card" id="cardNext" style="display:none;">
+      <h2>Next steps / Következő lépések</h2>
+      <ol>
+        <li>Complete the cognitive tasks / Kognitív feladatok elvégzése</li>
+        <li>Fill the questionnaire / Kérdőív kitöltése</li>
+      </ol>
+
+      <div class="row" style="margin-top:12px;">
+        <a class="btn primary" id="startBattery" href="./battery.html">Start tests / Tesztek indítása</a>
+        <a class="btn" id="openForm" href="#" target="_blank" rel="noopener">Open questionnaire / Kérdőív</a>
+      </div>
+
+      <p class="muted" style="margin-top:10px;">
+        Tip: use Chrome on a laptop/tablet if possible. / Tipp: lehetőleg Chrome laptopon/tableten.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const FORM_HU = "https://docs.google.com/forms/d/1KcXUHSDgzjEB64LFnpXH0Sa0tG4YSoG-39E_2RHor40/";
+    const FORM_EN = "https://docs.google.com/forms/d/1NENoY5RpnPbr3fnxPKTN-5R4UpdWPpwg_IcsJ6aap24/";
+
+    const langStatus = document.getElementById("langStatus");
+    const cardNext = document.getElementById("cardNext");
+    const openForm = document.getElementById("openForm");
+    const startBattery = document.getElementById("startBattery");
+
+    function setLang(lang){
+      localStorage.setItem("ETO_LANG", lang);
+      langStatus.textContent = (lang === "hu")
+        ? "Nyelv beállítva: Magyar"
+        : "Language set: English";
+      cardNext.style.display = "block";
+      openForm.href = (lang === "hu") ? FORM_HU : FORM_EN;
+      // Pass language to battery as URL param too (more robust than localStorage alone)
+      if (startBattery) startBattery.href = `./battery.html?lang=${encodeURIComponent(lang)}`;
+    }
+
+    document.getElementById("btnHU").addEventListener("click", () => setLang("hu"));
+    document.getElementById("btnEN").addEventListener("click", () => setLang("en"));
+
+    // If already selected earlier, show next card immediately
+    const saved = localStorage.getItem("ETO_LANG");
+    if (saved === "hu" || saved === "en") setLang(saved);
+  </script>
+</body>
+</html>
