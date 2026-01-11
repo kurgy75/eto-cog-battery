@@ -195,6 +195,8 @@
   </div>
 </section>
 
+
+
   </div>
 
   <script>
@@ -246,7 +248,8 @@
         thanks_title: "All done — thank you!",
         thanks_body: "Your data has been recorded. You can download your CSV or start a new participant.",
         download: "Download CSV", download2: "Download CSV", new: "New participant", new2: "New participant"
-      
+        questionnaire2: "Questionnaire"
+
         ,
         tp_title: "Go/No-Go (5 min)",
         tp_h: "Instructions (please read carefully)",
@@ -305,6 +308,7 @@
         thanks_title: "Köszönjük!",
         thanks_body: "Az adatok rögzítésre kerültek. Letöltheti a CSV-t vagy indíthat új résztvevőt.",
         download: "CSV letöltése", download2: "CSV letöltése", new: "Új résztvevő", new2: "Új résztvevő"
+        questionnaire2: "Kérdőív"
       
         ,
         tp_title: "Go/No-Go (5 perc)",
@@ -391,7 +395,7 @@
       $('t_download2').textContent = T.download2;
       $('t_new').textContent = T.new;
       $('t_new2').textContent = T.new2;
-    
+      if ($('t_questionnaire2')) $('t_questionnaire2').textContent = T.questionnaire2;
       const sel = $('lang'); if (sel) sel.value = lang;
       localStorage.setItem('ETO_LANG', lang);
     }
@@ -742,7 +746,7 @@
       tpShowTrial();
     }
 
-    function tpEnd(){
+   function tpEnd(){
   tpRunning = false;
   const dur = Math.round((Date.now() - tpStartWall)/1000);
   $('tpStatus').textContent = T.tp_finished(dur);
@@ -757,6 +761,7 @@
   // go to thanks
   hide('screen-tp'); show('screen-thanks');
 }
+
 
     // ===== Wiring / UI =====
     function resetForNew(){
@@ -810,4 +815,5 @@
   </script>
 </body>
 </html>
+
 
