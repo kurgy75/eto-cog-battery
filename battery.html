@@ -148,7 +148,6 @@
       </div>
     </section>
 
-
     <!-- TP Go/No-Go -->
     <section id="screen-tp" class="hidden">
       <div class="card">
@@ -199,14 +198,11 @@
   </div>
 </section>
 
-
-
   </div>
 
   <script>
   const TRIAL_WAVE = "T2";   // second measurement wave
     
-const TRIAL_WAVE = "T2";   // second measurement wave
   // ===== i18n =====
   const I18N = {
     en: {
@@ -627,7 +623,6 @@ let allRows = [];
       hide('screen-grid'); show('screen-tp');
     }
 
-
     // ===== TP Go/No-Go implementation =====
     const TP_DURATION_MS = 5 * 60 * 1000;
     const TP_SOA_MS = 1000;      // total cycle
@@ -792,7 +787,6 @@ let allRows = [];
   hide('screen-tp'); show('screen-thanks');
 }
 
-
     // ===== Wiring / UI =====
     function resetForNew(){
       // reset state
@@ -831,7 +825,6 @@ let allRows = [];
       $('confirmGrid').addEventListener('change', ()=>{ $('btnStartGrid').disabled = !$('confirmGrid').checked; });
       $('btnStartGrid').addEventListener('click', gridBegin);
 
-
       $('confirmTP').addEventListener('change', ()=>{ $('btnStartTP').disabled = !$('confirmTP').checked; });
       $('btnStartTP').addEventListener('click', tpBegin);
 
@@ -850,4 +843,3 @@ let allRows = [];
   </script>
 </body>
 </html>
-
