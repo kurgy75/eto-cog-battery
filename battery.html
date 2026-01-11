@@ -366,9 +366,10 @@ const TRIAL_WAVE = "T2";   // second measurement wave
     const LIMIT_MS = 4 * 60 * 1000;
 
     // ===== Shared state =====
-    let lang = (localStorage.getItem("ETO_LANG") || "hu");
-    if (!(lang in I18N)) lang = 'en';
-    let T = I18N[lang];
+    const urlLang = new URLSearchParams(window.location.search).get('lang');
+    const savedLang = urlLang || localStorage.getItem('ETO_LANG') || 'hu';
+    let lang = (savedLang === 'hu' || savedLang === 'en') ? savedLang : 'en';
+    let T = I18N[lang] || I18N.en;
     let sessionId = null;
     let allRows = []; // combined logs from both tasks for the final CSV
 
@@ -840,4 +841,3 @@ const TRIAL_WAVE = "T2";   // second measurement wave
   </script>
 </body>
 </html>
-
