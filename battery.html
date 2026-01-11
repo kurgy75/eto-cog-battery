@@ -366,12 +366,16 @@ const TRIAL_WAVE = "T2";   // second measurement wave
     const LIMIT_MS = 4 * 60 * 1000;
 
     // ===== Shared state =====
-    const urlLang = new URLSearchParams(window.location.search).get('lang');
-    const savedLang = urlLang || localStorage.getItem('ETO_LANG') || 'hu';
-    let lang = (savedLang === 'hu' || savedLang === 'en') ? savedLang : 'en';
-    let T = I18N[lang] || I18N.en;
-    let sessionId = null;
-    let allRows = []; // combined logs from both tasks for the final CSV
+// 1. Check URL param first, then localStorage, default to 'hu' (or 'en')
+const urlParams = new URLSearchParams(window.location.search);
+const urlLang = urlParams.get('lang');
+const savedLang = urlLang || localStorage.getItem('ETO_LANG');
+
+// 2. Validate and set the initial lang
+let lang = (savedLang === 'hu' || savedLang === 'en') ? savedLang : 'hu'; 
+let T = I18N[lang];
+let sessionId = null;
+let allRows = [];
 
     // ===== Helpers =====
     const $ = id => document.getElementById(id);
@@ -801,10 +805,15 @@ const TRIAL_WAVE = "T2";   // second measurement wave
       hide('screen-corsi'); hide('screen-grid'); hide('screen-thanks'); show('screen-landing');
     }
 
-    function init(){
-      setLang(lang);
-      const sel = $('lang'); if (sel) sel.value = lang;
-      $('lang').addEventListener('change', e=> setLang(e.target.value));
+      function init(){
+  // This ensures the UI elements (labels, buttons) 
+  // are translated immediately on load
+  setLang(lang); 
+  
+  const sel = $('lang'); 
+  if (sel) sel.value = lang;
+  
+  $('lang').addEventListener('change', e => setLang(e.target.value));
       $('confirmBattery').addEventListener('change', gateStartBattery);
       $('participantId').addEventListener('input', gateStartBattery);
       $('computerId').addEventListener('input', gateStartBattery);
@@ -841,3 +850,4 @@ const TRIAL_WAVE = "T2";   // second measurement wave
   </script>
 </body>
 </html>
+
