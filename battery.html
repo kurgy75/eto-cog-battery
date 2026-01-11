@@ -36,6 +36,10 @@
     .cell:active { transform: scale(.98); }
     .cell.correct { background:#dcfce7; border-color:#86efac; }
     .cell.wrong { background:#fee2e2; border-color:#fca5a5; }
+  
+    a.btn{display:inline-block; text-decoration:none;}
+    .btn.primary{padding:10px 16px; border-radius:10px; border:1px solid var(--blue); background:var(--blue); color:#fff; font-weight:600;}
+    .btn.primary:hover{filter:brightness(0.95);}
   </style>
 </head>
 <body>
@@ -201,131 +205,152 @@
 
   <script>
   const TRIAL_WAVE = "T2";   // second measurement wave
-    // ===== i18n =====
-    const I18N = {
-      en: {
-        app_title: "Sport Cognition Battery",
-        landing_title: "Welcome",
-        participant: "Participant ID",
-        computer: "Computer ID",
-        language: "Language",
-        battery_h: "About this session",
-        battery_body:
-          "• You will complete two tasks in this order: <b>Corsi</b> → <b>Number Grid</b>.<br/>" +
-          "• Please work quickly and accurately. Reaction times and accuracy are recorded.<br/>" +
-          "• Use the same computer and Chrome browser when possible.",
-        confirm_battery: "I have read the instructions.",
-        start_battery: "Start — Corsi",
+    
+const TRIAL_WAVE = "T2";   // second measurement wave
+  // ===== i18n =====
+  const I18N = {
+    en: {
+      app_title: "Sport Cognition Battery",
+      landing_title: "Welcome",
+      participant: "Participant ID",
+      computer: "Computer ID",
+      language: "Language",
+      battery_h: "About this session",
+      battery_body:
+        "• You will complete two tasks in this order: <b>Corsi</b> → <b>Number Grid</b>.<br/>" +
+        "• Please work quickly and accurately. Reaction times and accuracy are recorded.<br/>" +
+        "• Use the same computer and Chrome browser when possible.",
+      confirm_battery: "I have read the instructions.",
+      start_battery: "Start — Corsi",
 
-        corsi_title: "Corsi Block Tapping Task",
-        corsi_h: "Instructions (please read carefully)",
-        corsi_body:
-          "• Squares will light up one-by-one; watch the full sequence.<br/>" +
-          "• Then click the squares in the <b>same order</b>.<br/>" +
-          "• After a correct trial, the sequence gets longer. If you make a mistake, you retry the same length once. Two mistakes at the same length ends the task.<br/>" +
-          "• Respond quickly and accurately; we record reaction times.",
-        confirm_corsi: "I have read and understood these instructions.",
-        start_corsi: "Start Corsi",
-        live: "Live status",
-        corsi_finished: s => `Corsi finished. Final span: ${s}`,
-        corsi_info2: "Proceeding to the next task…",
+      corsi_title: "Corsi Block Tapping Task",
+      corsi_h: "Instructions (please read carefully)",
+      corsi_body:
+        "• Squares will light up one-by-one; watch the full sequence.<br/>" +
+        "• Then click the squares in the <b>same order</b>.<br/>" +
+        "• After a correct trial, the sequence gets longer. If you make a mistake, you retry the same length once. Two mistakes at the same length ends the task.<br/>" +
+        "• Respond quickly and accurately; we record reaction times.",
+      confirm_corsi: "I have read and understood these instructions.",
+      start_corsi: "Start Corsi",
+      live: "Live status",
+      corsi_finished: s => `Corsi finished. Final span: ${s}`,
+      corsi_info2: "Proceeding to the next task…",
 
-        grid_title: "Number Grid 00→99 (4 min)",
-        grid_h: "Instructions (please read carefully)",
-        grid_body:
-          "• A 10×10 grid shows numbers from <b>00</b> to <b>99</b> in random positions.<br/>" +
-          "• Click the numbers in <b>ascending order</b>: 00, 01, 02, …, 99.<br/>" +
-          "• You have <b>4 minutes</b>. Incorrect clicks are recorded but do not advance the target number.<br/>" +
-          "• Reaction times are measured between correct clicks.",
-        confirm_grid: "I have read and understood these instructions.",
-        start_grid: "Start Number Grid",
+      grid_title: "Number Grid 00→99 (4 min)",
+      grid_h: "Instructions (please read carefully)",
+      grid_body:
+        "• A 10×10 grid shows numbers from <b>00</b> to <b>99</b> in random positions.<br/>" +
+        "• Click the numbers in <b>ascending order</b>: 00, 01, 02, …, 99.<br/>" +
+        "• You have <b>4 minutes</b>. Incorrect clicks are recorded but do not advance the target number.<br/>" +
+        "• Reaction times are measured between correct clicks.",
+      confirm_grid: "I have read and understood these instructions.",
+      start_grid: "Start Number Grid",
 
-        timer: "Time left", target: "Target", errors: "Errors", progress: "Progress",
-        posting: "Sending data to Google Sheets…",
-        posted: "Data sent to Google Sheets.",
-        posterr: "Could not send to Google Sheets (saved CSV locally).",
-        grid_finished: n => `Number Grid finished. Highest number reached: ${n}`,
-        thanks_title: "All done — thank you!",
-        thanks_body: "Your data has been recorded. You can download your CSV or start a new participant.",
-        download: "Download CSV", download2: "Download CSV", new: "New participant", new2: "New participant"
-        questionnaire2: "Questionnaire"
+      timer: "Time left",
+      target: "Target",
+      errors: "Errors",
+      progress: "Progress",
 
-        ,
-        tp_title: "Go/No-Go (5 min)",
-        tp_h: "Instructions (please read carefully)",
-        tp_body:
-          "• Symbols appear one-by-one.\n" +
-          "• Press <b>SPACE</b> (or click/tap) ONLY for <b>target</b> symbols.\n" +
-          "• Do NOT respond to non-target symbols.\n" +
-          "• Targets are the four <b>corner</b> symbols (up+right, up+left, down+right, down+left).",
-        confirm_tp: "I have read and understood these instructions.",
-        start_tp: "Start Go/No-Go",
-        tp_live: "Live status",
-        tp_finished: d => `Go/No-Go finished. Duration: ${d} sec`
-},
-      hu: {
-        app_title: "Sportkognitív tesztcsomag",
-        landing_title: "Üdvözöljük",
-        participant: "Résztvevő azonosító",
-        computer: "Számítógép azonosító",
-        language: "Nyelv",
-        battery_h: "A feladatról",
-        battery_body:
-          "• Két feladat következik ebben a sorrendben: <b>Corsi</b> → <b>Számtábla</b>.<br/>" +
-          "• Kérjük, dolgozzon gyorsan és pontosan. A reakcióidőket és a pontosságot rögzítjük.<br/>" +
-          "• Lehetőleg ugyanazt a gépet és Chrome böngészőt használja.",
-        confirm_battery: "Elolvastam az útmutatót.",
-        start_battery: "Indítás — Corsi",
+      posting: "Sending data to Google Sheets…",
+      posted: "Data sent to Google Sheets.",
+      posterr: "Could not send to Google Sheets (saved CSV locally).",
 
-        corsi_title: "Corsi-blokk koppintási feladat",
-        corsi_h: "Útmutató (kérjük, figyelmesen olvassa el)",
-        corsi_body:
-          "• Négyzetek fognak egymás után röviden felvillanni; figyelje a teljes sorrendet.<br/>" +
-          "• Ezután koppintsa/kattintsa végig <b>ugyanabban a sorrendben</b>!<br/>" +
-          "• Helyes válasz után a sorozat hossza nő. Ha hibázik, ugyanazt a hosszt még egyszer megismételjük. Két hiba ugyanazon a hosszon megszakítja a feladatot.<br/>" +
-          "• Próbáljon gyorsan és pontosan válaszolni; a reakcióidőket rögzítjük.",
-        confirm_corsi: "Elolvastam és megértettem az útmutatót.",
-        start_corsi: "Corsi indítása",
-        live: "Állapot",
-        corsi_finished: s => `Corsi vége. Végső span: ${s}`,
-        corsi_info2: "Következő feladatra lépés…",
+      tp_title: "Go/No-Go (5 min)",
+      tp_h: "Instructions (please read carefully)",
+      tp_body:
+        "• Symbols appear one-by-one.\n" +
+        "• Press <b>SPACE</b> (or click/tap) ONLY for <b>target</b> symbols.\n" +
+        "• Do NOT respond to non-target symbols.\n" +
+        "• Targets are the four <b>corner</b> symbols (up+right, up+left, down+right, down+left).",
+      confirm_tp: "I have read and understood these instructions.",
+      start_tp: "Start Go/No-Go",
+      tp_live: "Live status",
+      tp_finished: d => `Go/No-Go finished. Duration: ${d} sec`,
 
-        grid_title: "Számtábla 00→99 (4 perc)",
-        grid_h: "Útmutató (kérjük, figyelmesen olvassa el)",
-        grid_body:
-          "• Egy 10×10-es táblán <b>00</b>-tól <b>99</b>-ig szerepelnek a számok véletlen sorrendben.<br/>" +
-          "• Kattintson <b>növekvő sorrendben</b>: 00, 01, 02, …, 99.<br/>" +
-          "• <b>4 perc</b> áll rendelkezésre. A hibás kattintásokat rögzítjük, de nem léptetik előre a célszámot.<br/>" +
-          "• A reakcióidőt a helyes kattintások között mérjük.",
-        confirm_grid: "Elolvastam és megértettem az útmutatót.",
-        start_grid: "Számtábla indítása",
+      grid_finished: n => `Number Grid finished. Highest number reached: ${n}`,
+      thanks_title: "All done — thank you!",
+      thanks_body: "Your data has been recorded. You can download your CSV or start a new participant.",
+      questionnaire2: "Questionnaire",
+      download: "Download CSV",
+      download2: "Download CSV",
+      new: "New participant",
+      new2: "New participant"
+    },
 
-        timer: "Hátralévő idő", target: "Cél", errors: "Hibák", progress: "Előrehaladás",
-        posting: "Adatok küldése a Google Sheets-be…",
-        posted: "Adatok elküldve a Google Sheets-be.",
-        posterr: "Nem sikerült elküldeni (CSV helyben mentve).",
-        grid_finished: n => `Számtábla vége. Elért legnagyobb szám: ${n}`,
-        thanks_title: "Köszönjük!",
-        thanks_body: "Az adatok rögzítésre kerültek. Letöltheti a CSV-t vagy indíthat új résztvevőt.",
-        download: "CSV letöltése", download2: "CSV letöltése", new: "Új résztvevő", new2: "Új résztvevő"
-        questionnaire2: "Kérdőív"
-      
-        ,
-        tp_title: "Go/No-Go (5 perc)",
-        tp_h: "Útmutató (kérjük, figyelmesen olvassa el)",
-        tp_body:
-          "• Szimbólumok jelennek meg egymás után.\n" +
-          "• Csak a <b>célingereknél</b> nyomjon <b>SPACE</b>-t (vagy kattintson/tapintson).\n" +
-          "• A nem-cél ingereknél NE reagáljon.\n" +
-          "• Célingerek: a négy <b>sarok</b> szimbólum (fel+jobb, fel+bal, le+jobb, le+bal).",
-        confirm_tp: "Elolvastam és megértettem az útmutatót.",
-        start_tp: "Go/No-Go indítása",
-        tp_live: "Állapot",
-        tp_finished: d => `Go/No-Go vége. Időtartam: ${d} mp`
-}
-    };
+    hu: {
+      app_title: "Sportkognitív tesztcsomag",
+      landing_title: "Üdvözöljük",
+      participant: "Résztvevő azonosító",
+      computer: "Számítógép azonosító",
+      language: "Nyelv",
+      battery_h: "A feladatról",
+      battery_body:
+        "• Két feladat következik ebben a sorrendben: <b>Corsi</b> → <b>Számtábla</b>.<br/>" +
+        "• Kérjük, dolgozzon gyorsan és pontosan. A reakcióidőket és a pontosságot rögzítjük.<br/>" +
+        "• Lehetőleg ugyanazt a gépet és Chrome böngészőt használja.",
+      confirm_battery: "Elolvastam az útmutatót.",
+      start_battery: "Indítás — Corsi",
 
-    // ===== Config =====
+      corsi_title: "Corsi-blokk koppintási feladat",
+      corsi_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+      corsi_body:
+        "• Négyzetek fognak egymás után röviden felvillanni; figyelje a teljes sorrendet.<br/>" +
+        "• Ezután koppintsa/kattintsa végig <b>ugyanabban a sorrendben</b>!<br/>" +
+        "• Helyes válasz után a sorozat hossza nő. Ha hibázik, ugyanazt a hosszt még egyszer megismételjük. Két hiba ugyanazon a hosszon megszakítja a feladatot.<br/>" +
+        "• Próbáljon gyorsan és pontosan válaszolni; a reakcióidőket rögzítjük.",
+      confirm_corsi: "Elolvastam és megértettem az útmutatót.",
+      start_corsi: "Corsi indítása",
+      live: "Állapot",
+      corsi_finished: s => `Corsi vége. Végső span: ${s}`,
+      corsi_info2: "Következő feladatra lépés…",
+
+      grid_title: "Számtábla 00→99 (4 perc)",
+      grid_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+      grid_body:
+        "• Egy 10×10-es táblán <b>00</b>-tól <b>99</b>-ig szerepelnek a számok véletlen sorrendben.<br/>" +
+        "• Kattintson <b>növekvő sorrendben</b>: 00, 01, 02, …, 99.<br/>" +
+        "• <b>4 perc</b> áll rendelkezésre. A hibás kattintásokat rögzítjük, de nem léptetik előre a célszámot.<br/>" +
+        "• A reakcióidőt a helyes kattintások között mérjük.",
+      confirm_grid: "Elolvastam és megértettem az útmutatót.",
+      start_grid: "Számtábla indítása",
+
+      timer: "Hátralévő idő",
+      target: "Cél",
+      errors: "Hibák",
+      progress: "Előrehaladás",
+
+      posting: "Adatok küldése a Google Sheets-be…",
+      posted: "Adatok elküldve a Google Sheets-be.",
+      posterr: "Nem sikerült elküldeni (CSV helyben mentve).",
+
+      tp_title: "Go/No-Go (5 perc)",
+      tp_h: "Útmutató (kérjük, figyelmesen olvassa el)",
+      tp_body:
+        "• Szimbólumok jelennek meg egymás után.\n" +
+        "• Csak a <b>célingereknél</b> nyomjon <b>SPACE</b>-t (vagy kattintson/tapintson).\n" +
+        "• A nem-cél ingereknél NE reagáljon.\n" +
+        "• Célingerek: a négy <b>sarok</b> szimbólum (fel+jobb, fel+bal, le+jobb, le+bal).",
+      confirm_tp: "Elolvastam és megértettem az útmutatót.",
+      start_tp: "Go/No-Go indítása",
+      tp_live: "Állapot",
+      tp_finished: d => `Go/No-Go vége. Időtartam: ${d} mp`,
+
+      grid_finished: n => `Számtábla vége. Elért legnagyobb szám: ${n}`,
+      thanks_title: "Köszönjük!",
+      thanks_body: "Az adatok rögzítésre kerültek. Letöltheti a CSV-t vagy indíthat új résztvevőt.",
+      questionnaire2: "Kérdőív",
+      download: "CSV letöltése",
+      download2: "CSV letöltése",
+      new: "Új résztvevő",
+      new2: "Új résztvevő"
+    }
+  };
+
+    
+    // Questionnaire links
+    const FORM_HU = "https://docs.google.com/forms/d/1KcXUHSDgzjEB64LFnpXH0Sa0tG4YSoG-39E_2RHor40/";
+    const FORM_EN = "https://docs.google.com/forms/d/1NENoY5RpnPbr3fnxPKTN-5R4UpdWPpwg_IcsJ6aap24/";
+// ===== Config =====
     const CSV_DELIM = ';';
     const ADD_UTF8_BOM = true;
     const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw3ZQ1bLj9EG6GD4MPpLLzQ1sTIU9OjBazJfG2tKTxyT1KyElmjEca36IF4fdZpo5nxwg/exec"; // ← paste your current Web App URL
@@ -815,5 +840,4 @@
   </script>
 </body>
 </html>
-
 
